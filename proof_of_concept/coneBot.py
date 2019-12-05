@@ -1,59 +1,33 @@
-from coneDetection import *
-from colorDetection import *
+import coneDetection
+import colorDetection
 import pdb
 import os
 
 DIR_PATH = '/home/pi/Desktop/cone_images/'
 
-class ConeBot
+class ConeBot:
 
     def __init__(self, dir_path):
         self.dir_path = dir_path
+        self.calibrated = False
         
     def calibrate(self):
-        pic_name = dir_path + 'img.jpg'
-        take_picture(pic_name)
-        boundaries = get_hsv_boundaries(pic_name)
+        pic_name = self.dir_path + 'img.jpg'
+        coneDetection.take_picture(pic_name)
+        boundaries = colorDetection.get_hsv_boundaries(pic_name)
         self.boundaries = boundaries
-        
+        self.calibrated = True
+        return self.boundaries
+          
+    def findCone(self, boundaries = None, imageSource = 'camera'):
+        if boundaries is None:
+            boundaries = self.boundaries
+        return coneDetection.findCone(colorBounds = boundaries, imageSource = imageSource)
 
 
-bot = ConeBot()DIfrom coneDetection import *
-from colorDetection import *
-import pdb
-import os
+bot = ConeBot(DIR_PATH)
+boundaries = bot.calibrate()
+print(boundaries)
 
-DIR_PATH = '/home/pi/Desktop/cone_images/'
-
-class ConeBot
-
-    def __init__(self, dir_path):
-        self.dir_path = dir_path
-        
-    def calibrate(self):
-        pic_name = dir_path + 'img.jpg'
-        take_picture(pic_name)
-        boundaries = get_hsv_boundaries(pic_name)
-        self.boundaries = boundaries
-        
-from coneDetection import *
-from colorDetection import *
-import pdb
-import os
-
-DIR_PATH = '/home/pi/Desktop/cone_images/'
-
-class ConeBot
-
-    def __init__(self, dir_path):
-        self.dir_path = dir_path
-        
-    def calibrate(self):
-        pic_name = dir_path + 'img.jpg'
-        take_picture(pic_name)
-        boundaries = get_hsv_boundaries(pic_name)
-        self.boundaries = boundaries
-        
-
-cone = findCone(colorBounds = boundaries, imageSource='camera')
+cone = bot.findCone()
 print(cone)
