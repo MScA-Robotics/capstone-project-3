@@ -46,11 +46,15 @@ class ConeBot:
     def centerCone(self):
         assert(self.calibrated)
         centered = False
+        current_degree = 0 
         while not centered:
             time.sleep(.5)
             cone_x = self.findCone()
             if cone_x is False:
-                return False
+                if current_degree > 360:
+                    return false
+                self.gpg.turn_degrees(45)
+                current_degree += 45
             if cone_x > .55:
                 self.gpg.turn_degrees(10)
             elif cone_x < .45:
@@ -61,7 +65,7 @@ class ConeBot:
 
 
 bot = ConeBot(DIR_PATH)
-boundaries = bot.calibrate()
+boundaries = bot.calibrate()# 
 print(boundaries)
 
 cone = bot.findCone()
