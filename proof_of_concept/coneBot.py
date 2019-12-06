@@ -9,7 +9,7 @@ from easygopigo3 import EasyGoPiGo3
 # Custom modules
 import coneDetection
 import colorDetection
-
+import circumNam
 
 DIR_PATH = '/home/pi/Desktop/cone_images/'
 
@@ -63,6 +63,13 @@ class ConeBot:
                 centered = True
         return True
 
+    def circumNavigate(self):
+        circumNav.circumNav(self.gpg)
+
+    def solve_q1_task(self):
+        self.centerCone()
+        self.circumNavigate()
+
 
 bot = ConeBot(DIR_PATH)
 boundaries = bot.calibrate()# 
@@ -70,3 +77,5 @@ print(boundaries)
 
 cone = bot.findCone()
 print(cone)
+
+# bot.solve_q1_task()
