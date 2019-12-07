@@ -9,7 +9,7 @@ from easygopigo3 import EasyGoPiGo3
 # Custom modules
 import coneDetection
 import colorDetection
-import circumNam
+import circumNav
 
 DIR_PATH = '/home/pi/Desktop/cone_images/'
 
