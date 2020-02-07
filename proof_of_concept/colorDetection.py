@@ -1,11 +1,5 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-
-# import the necessary packages
 import numpy as np
 import cv2
-
 
 
 def get_hsv_boundaries(imgPath):
@@ -78,9 +72,3 @@ def get_hsv_boundaries(imgPath):
             break
 
     return boundaries
-
-#image = cv2.imread("data/cone1.jpeg")
-#image = cv2.imread("data/cone2.jpeg")
-#image = cv2.imread("data/coneDark.jpeg")
-image = "data/vertical_image.jpeg"
-print('Boundaries for HSV are:' , get_hsv_boundaries(image))
