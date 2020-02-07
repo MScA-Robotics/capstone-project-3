@@ -15,12 +15,5 @@ def take_picture(path = usb_path):
        camera.capture(path + "image_{0}.jpg".format(datetime.now().strftime('%m%d%Y%H%M%S')))
     finally:
        camera.close()
-    
-robot = EasyGoPiGo3()
-robot.forward()
-sleep(1)
+       
 take_picture()
-robot.right()
-sleep(1)
-take_picture()
-robot.stop()
