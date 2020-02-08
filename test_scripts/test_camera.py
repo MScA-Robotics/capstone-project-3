@@ -1,12 +1,21 @@
-
 import time
 import picamera
 from datetime import datetime
+from easygopigo3 import EasyGoPiGo3
+from time import sleep
 
-usb_path = "/home/pi/Desktop/cone_images/"
-camera = picamera.PiCamera()
 
-try:
-   camera.capture(usb_path + "image_{0}.jpg".format(datetime.now().strftime('%m%d%Y%H%M%S')))
-finally:
-   camera.close()
+DEFAULT_CAMERA_PATH = "/home/pi/Pictures/"
+
+
+def take_picture(path = DEFAULT_CAMERA_PATH):
+    camera = picamera.PiCamera()
+    try:
+       camera.capture(path + "image_{0}.jpg".format(datetime.now().strftime('%m%d%Y%H%M%S')))
+    finally:
+       camera.close()
+       
+
+if __name__ == '__main__':
+
+    take_picture()

@@ -1,17 +1,51 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
 import cv2
 import numpy as np
 import time
-from picamera import PiCamera #comment out if on windows and use static image file
-from picamera import PiRGBArray
+from picamera import PiCamera
+from picamera.array import PiRGBArray
+import pdb
 
 
-# In[77]:
+def take_picture(filename):
+    camera = PiCamera()
+    try:
+       camera.capture(filename)
+    finally:
+       camera.close()
+
+
+def convexHullPointingUp(ch):
+    pointsAboveCenter, poinstBelowCenter = [], []
+
+    x, y, w, h = cv2.boundingRect(ch)
+    aspectRatio = w / h
+
+    if aspectRatio < 0.8:
+        verticalCenter = y + h / 2
+
+        for point in ch:
+            if point[0][1] < verticalCenter:
+                pointsAboveCenter.append(point)
+            elif point[0][1] >= verticalCenter:
+                poinstBelowCenter.append(point)
+
+        leftX = poinstBelowCenter[0][0][0]
+        rightX = poinstBelowCenter[0][0][0]
+        for point in poinstBelowCenter:
+            if point[0][0] < leftX:
+                leftX = point[0][0]
+            if point[0][0] > rightX:
+                rightX = point[0][0]
+
+        for point in pointsAboveCenter:
+            if (point[0][0] < leftX) or (point[0][0] > rightX):
+                return False
+
+    else:
+        return False
+
+    return True
+
 
 
 def findCone(colorBounds = [([119, 82, 29],[135, 225, 96])], imageSource = "camera"):
@@ -23,42 +57,10 @@ def findCone(colorBounds = [([119, 82, 29],[135, 225, 96])], imageSource = "came
     Dependencies: Numpy, cv2, picamera, time
     Limitations: picamera can only run on the raspberry pi itself.  Comment out the picamera imports and use saved images if testing on a different platform
     """
-    def convexHullPointingUp(ch):
-        pointsAboveCenter, poinstBelowCenter = [], []
-
-        x, y, w, h = cv2.boundingRect(ch)
-        aspectRatio = w / h
-
-        if aspectRatio < 0.8:
-            verticalCenter = y + h / 2
-
-            for point in ch:
-                if point[0][1] < verticalCenter:
-                    pointsAboveCenter.append(point)
-                elif point[0][1] >= verticalCenter:
-                    poinstBelowCenter.append(point)
-
-            leftX = poinstBelowCenter[0][0][0]
-            rightX = poinstBelowCenter[0][0][0]
-            for point in poinstBelowCenter:
-                if point[0][0] < leftX:
-                    leftX = point[0][0]
-                if point[0][0] > rightX:
-                    rightX = point[0][0]
-
-            for point in pointsAboveCenter:
-                if (point[0][0] < leftX) or (point[0][0] > rightX):
-                    return False
-
-        else:
-            return False
-
-        return True
-
 
     #_____imgOriginal
     if imageSource == "camera":
-        with picamera.PiCamera() as camera:
+        with PiCamera() as camera:
             res = (640, 480)
             camera.resolution = res
             camera.framerate = 24
@@ -90,7 +92,7 @@ def findCone(colorBounds = [([119, 82, 29],[135, 225, 96])], imageSource = "came
     imgCanny = cv2.Canny(imgThreshSmoothed, 80, 160)
 
     #_____imgContours
-    _, contours, _ = cv2.findContours(np.array(imgCanny), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(np.array(imgCanny), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     approxContours = []
 
@@ -135,22 +137,3 @@ def findCone(colorBounds = [([119, 82, 29],[135, 225, 96])], imageSource = "came
         return round(centers[0]/width, 5)
     except IndexError:
         return False
-
-
-# In[79]:
-
-
-#findCone(imageSource = 'data/cones/cone1.jpg')
-
-
-# In[80]:
-
-
-#findCone(imageSource = 'data/cones/blank.jpg')
-
-
-# In[ ]:
-
-
-
-
