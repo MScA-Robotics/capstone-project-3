@@ -107,4 +107,4 @@ venv.bak/
 .mypy_cache/
 
 # Audio files
-.wav
+*.wav
