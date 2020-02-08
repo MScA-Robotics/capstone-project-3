@@ -1,13 +1,14 @@
 import pyaudio
 import wave
+from datetime import datetime
 
 form_1 = pyaudio.paInt16 # 16-bit resolution
 chans = 1 # 1 channel
 samp_rate = 44100 # 44.1kHz sampling rate
 chunk = 4096 # 2^12 samples for buffer
 record_secs = 30 # seconds to record
-dev_index = 1 # device index found by p.get_device_info_by_index(ii)
-wav_output_filename = 'lousy_mic_recording.wav' # name of .wav file
+dev_index = 2 # device index found by p.get_device_info_by_index(ii)
+wav_output_filename = 'omnimic_recording_{}.wav'.format(datetime.now().strftime('%m%d%Y%H%M%S')) # name of .wav file
 
 audio = pyaudio.PyAudio() # create pyaudio instantiation
 
