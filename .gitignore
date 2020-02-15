@@ -109,5 +109,8 @@ venv.bak/
 # Audio files
 *.wav
 
+# Images
+*.jpg
+
 # Model directories
 *_model
