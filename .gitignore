@@ -108,3 +108,6 @@ venv.bak/
 
 # Audio files
 *.wav
+
+# Model directories
+*_model
