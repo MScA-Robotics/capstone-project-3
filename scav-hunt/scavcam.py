@@ -4,18 +4,8 @@ import cv2
 import numpy as np
 import importlib.util
 
-# Import TensorFlow libraries
-# If tensorflow is not installed, import interpreter from tflite_runtime, else import from regular tensorflow
-# If using Coral Edge TPU, import the load_delegate library
-pkg = importlib.util.find_spec('tensorflow')
-if pkg is None:
-    from tflite_runtime.interpreter import Interpreter
-    if use_TPU:
-        from tflite_runtime.interpreter import load_delegate
-else:
-    from tensorflow.lite.python.interpreter import Interpreter
-    if use_TPU:
-        from tensorflow.lite.python.interpreter import load_delegate
+# If using TPU, need to load a different library
+from tensorflow.lite.python.interpreter import Interpreter
 
 def take_picture(path):
     if path is None:
