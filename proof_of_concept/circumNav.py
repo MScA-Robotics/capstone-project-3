@@ -50,7 +50,7 @@ def circumNav(gpg, dist_sensor=None, params=None):
     gpg.turn_degrees(-90)
 
     # Complete the orbit
-    gpg.orbit(360,(2*ob_dist/10))
+    gpg.orbit(180,(2*ob_dist/10))
 
     # Rotate back to facing the cone
     gpg.turn_degrees(90)
