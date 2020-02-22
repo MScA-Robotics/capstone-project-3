@@ -1,0 +1,12 @@
+Backpack
+Ball
+Book
+Bottle
+Dice
+Footwear
+Fruit
+Glasses
+Handbag
+Helmet
+Suitcase
+Wine
