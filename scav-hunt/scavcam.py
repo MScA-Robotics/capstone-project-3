@@ -8,15 +8,14 @@ import importlib.util
 from tensorflow.lite.python.interpreter import Interpreter
 
 
-def take_pictures(path, n=1):
+def take_picture(path):
     if path is None:
         path = "/home/pi/Pictures"
     camera = picamera.PiCamera()
-    for i in range(n):
-        try:
-           camera.capture(os.path.join(path, "image_{0}.jpg".format(datetime.now().strftime('%m%d%Y%H%M%S'))))
-        finally:
-           camera.close()
+    try:
+       camera.capture(os.path.join(path, "image_{0}.jpg".format(datetime.now().strftime('%m%d%Y%H%M%S'))))
+    finally:
+       camera.close()
 
 
 class ObjectClassificationModel:
