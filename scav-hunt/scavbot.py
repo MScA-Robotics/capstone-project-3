@@ -46,10 +46,10 @@ class ScavBot:
 
         # Circumscibe a circle around the cone
         # rotate gpg 90 degrees to prep for the orbit
-        gpg.turn_degrees(-90)
+        self.gpg.turn_degrees(-90)
 
         # Complete the orbit
-        gpg.orbit(180, (2*self.params['radius']/10))
+        self.gpg.orbit(180, (2*self.params['radius']/10))
 
         # Rotate back to facing the cone
         self.gpg.turn_degrees(90)
@@ -58,7 +58,7 @@ class ScavBot:
 
         # Return to a base position
         print("That was fun... I go home now") 
-        gpg.drive_cm(-20,True)
+        self.gpg.drive_cm(-20,True)
 
 if __name__ == '__main__':
 import config
