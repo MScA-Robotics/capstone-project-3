@@ -5,8 +5,7 @@ from datetime import datetime
 from easygopigo3 import EasyGoPiGo3
 import picamera
 
-from scaveye import ObjectClassificationModel
-from scavnav import NavigationControl
+from scaveye import ObjectClassificationModel, take_picture
 
 
 class ScavBot:
