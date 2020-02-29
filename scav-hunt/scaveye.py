@@ -54,9 +54,11 @@ class ObjectClassificationModel:
 
     def classify(self, image_dir):
         images = glob.glob(image_dir + '/*')
+        print(images)
         classes_list = []
         scores_list = []
         for image_path in images:
+            print('Classifying: {}'.format(image_path))
             # Load image and resize to expected shape [1xHxWx3]
             image = cv2.imread(image_path)
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -65,11 +67,11 @@ class ObjectClassificationModel:
             input_data = np.expand_dims(image_resized, axis=0)
 
             # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
-            if floating_model:
+            if self.floating_model:
                 input_data = (np.float32(input_data) - self.input_mean) / self.input_std
 
             # Perform the actual detection by running the model with the image as input
-            self.interpreter.set_tensor(input_details[0]['index'],input_data)
+            self.interpreter.set_tensor(self.input_details[0]['index'],input_data)
             self.interpreter.invoke()
 
             # Retrieve detection results
