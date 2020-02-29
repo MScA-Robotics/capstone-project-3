@@ -84,6 +84,20 @@ class ScavBot:
             os.makedirs(picture_path)      
         take_picture(picture_path)
 
+        self.gpg.orbit(60, (2*self.params['radius']/10))
+        picture_path = os.path.join(self.image_dir, color)
+        if not os.path.exists(picture_path):
+            os.makedirs(picture_path)      
+        take_picture(picture_path)
+
+        self.gpg.orbit(60, (2*self.params['radius']/10))
+        picture_path = os.path.join(self.image_dir, color)
+        if not os.path.exists(picture_path):
+            os.makedirs(picture_path)      
+        take_picture(picture_path)
+
+        self.gpg.orbit(40, (2*self.params['radius']/10))
+
         # Rotate back to facing the cone
         self.gpg.turn_degrees(90)
         ob_dist = self.dist_sensor.read_mm()
