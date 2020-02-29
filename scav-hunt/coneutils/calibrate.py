@@ -102,7 +102,7 @@ def load_boundaries(json_path):
 if __name__ == '__main__':
     from datetime import date
     
-    colors = []
+    colors = ['orange']
     
     picture_path = '/home/pi/Pictures/cone_calibration/{}'.format(str(date.today()))
     if not os.path.exists(picture_path):
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     
     for color in colors:
         take_picture(name=color+'.jpg', path=picture_path)
-        boundaries[color] = str(get_hsv_boundaries(os.path.join(picture_path, 'blue.jpg')))
+        boundaries[color] = str(get_hsv_boundaries(os.path.join(picture_path, color+ '.jpg')))
         
     print(boundaries)
     
