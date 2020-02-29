@@ -13,6 +13,9 @@ class ScavBot:
     def __init__(self, image_model_dir, image_dir, params, boundaries):
         self.gpg = EasyGoPiGo3()
         self.dist_sensor = self.gpg.init_distance_sensor()
+        self.servo = self.gpg.init_servo("SERVO1")
+        self.servo.rotate_servo(100)
+        
         self.params = params
         self.boundaries = boundaries
 
