@@ -6,19 +6,24 @@ from easygopigo3 import EasyGoPiGo3
 import picamera
 
 from scaveye import ObjectClassificationModel, take_picture
-
+from coneutils import detect
 
 class ScavBot:
 
-    def __init__(self, image_model_dir, image_dir, params):
+    def __init__(self, image_model_dir, image_dir, params, boundaries):
         self.gpg = EasyGoPiGo3()
-        self.dist_sensor = gpg.init_distance_sensor()
-        self.params = param
+        self.dist_sensor = self.gpg.init_distance_sensor()
+        self.params = params
+        self.boundaries = boundaries
 
         # Image Model
         self.image_model = ObjectClassificationModel( 
             model_dir = image_model_dir,
             image_dir = image_dir)
+        
+    def find_cone(self, color):
+        bounds = self.boundaries[color]
+        return detect.findCone(bounds)
         
     def drive_to_cone(self):
         # Drive to cone at full bore
@@ -61,11 +66,15 @@ class ScavBot:
         self.gpg.drive_cm(-20,True)
 
 if __name__ == '__main__':
-import config
+    import config
+    from coneutils import calibrate
+
+    boundaries_dict = calibrate.load_boundaries('coneutils/boundaries.json')
 
     bot = ScavBot(
-        image_model_dir='Sample_TFlite_model', 
+        image_model_dir='Sample_TFLite_model', 
         image_dir='/home/pi/Pictures',
-        params=config.params
+        params=config.params,
+        boundaries = boundaries_dict
     )
 

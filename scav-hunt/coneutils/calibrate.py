@@ -90,9 +90,11 @@ def get_hsv_boundaries(imgPath):
 
 
 def load_boundaries(json_path):
-    boundaries_dict = json.load(json_path)
+    with open(json_path) as f:
+        boundaries_dict = json.load(f)
     parsed_dict = {}
-    for k,v in boundaries_dict:
+    for k in boundaries_dict:
+        v = boundaries_dict[k]
         parsed_dict[k] = eval(v)
     return parsed_dict
     
@@ -100,7 +102,7 @@ def load_boundaries(json_path):
 if __name__ == '__main__':
     from datetime import date
     
-    colors = ['blue', 'orange']
+    colors = []
     
     picture_path = '/home/pi/Pictures/cone_calibration/{}'.format(str(date.today()))
     if not os.path.exists(picture_path):

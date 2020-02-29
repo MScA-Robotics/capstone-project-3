@@ -26,13 +26,13 @@ class ObjectClassificationModel:
         self.image_dir = image_dir
         self.min_conf_threshold = float(min_conf_threshold)
         self.use_TPU = use_TPU
-        self._load_model()
+        self._load_model(model_dir=model_dir, graph_name=graph_name)
 
-    def _load_model(model_dir=self.model_dir, graph_name = self.graph_name):
+    def _load_model(self, model_dir, graph_name):
         CWD_PATH = os.getcwd()
 
         # Load model labels
-        PATH_TO_LABELS = os.path.join(CWD_PATH,model_dir,LABELMAP_NAME)
+        PATH_TO_LABELS = os.path.join(CWD_PATH, model_dir, 'labelmap.txt')
         with open(PATH_TO_LABELS, 'r') as f:
             labels = [line.strip() for line in f.readlines()]
         if labels[0] == '???':
@@ -50,7 +50,7 @@ class ObjectClassificationModel:
         self.input_mean = 127.5
         self.input_std = 127.5
 
-    def classify(image_dir=self.image_dir):
+    def classify(self, image_dir):
         full_image_dir = os.path.join(os.getcwd(), image_dir)
         images = glob.glob(image_dir + '/*')
         classes_list = []
