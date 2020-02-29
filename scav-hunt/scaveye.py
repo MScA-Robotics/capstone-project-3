@@ -1,4 +1,5 @@
 import os
+import glob
 import picamera
 import cv2
 import numpy as np
@@ -52,7 +53,6 @@ class ObjectClassificationModel:
         self.input_std = 127.5
 
     def classify(self, image_dir):
-        full_image_dir = os.path.join(os.getcwd(), image_dir)
         images = glob.glob(image_dir + '/*')
         classes_list = []
         scores_list = []
@@ -61,24 +61,24 @@ class ObjectClassificationModel:
             image = cv2.imread(image_path)
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             imH, imW, _ = image.shape 
-            image_resized = cv2.resize(image_rgb, (width, height))
+            image_resized = cv2.resize(image_rgb, (self.width, self.height))
             input_data = np.expand_dims(image_resized, axis=0)
 
             # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
             if floating_model:
-                input_data = (np.float32(input_data) - input_mean) / input_std
+                input_data = (np.float32(input_data) - self.input_mean) / self.input_std
 
             # Perform the actual detection by running the model with the image as input
-            interpreter.set_tensor(input_details[0]['index'],input_data)
-            interpreter.invoke()
+            self.interpreter.set_tensor(input_details[0]['index'],input_data)
+            self.interpreter.invoke()
 
             # Retrieve detection results
             # We are not using the boxes right now since we do not need to know 
             # where picture the object is, only that it is there.
 
             # boxes = interpreter.get_tensor(output_details[0]['index'])[0] # Bounding box coordinates of detected objects
-            classes = interpreter.get_tensor(output_details[1]['index'])[0] # Class index of detected objects
-            scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
+            classes = self.interpreter.get_tensor(self.output_details[1]['index'])[0] # Class index of detected objects
+            scores = self.interpreter.get_tensor(self.output_details[2]['index'])[0] # Confidence of detected objects
             # num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
 
             classes_list.append(classes)
