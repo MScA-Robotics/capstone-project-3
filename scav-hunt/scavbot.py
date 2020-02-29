@@ -27,6 +27,25 @@ class ScavBot:
     def find_cone(self, color):
         bounds = self.boundaries[color]
         return detect.findCone(bounds)
+
+    def center_cone(self, color):
+        centered = False
+        current_degree = 0 
+        while not centered:
+            time.sleep(.5)
+            cone_x = self.find_cone(color)
+            if cone_x is False:
+                if current_degree > 360:
+                    return false
+                self.gpg.turn_degrees(-20)
+                current_degree += -20
+            if cone_x > .6:
+                self.gpg.turn_degrees(10)
+            elif cone_x < .4:
+                self.gpg.turn_degrees(-10)
+            else:
+                centered = True
+        return True
         
     def drive_to_cone(self):
         # Drive to cone at full bore
@@ -47,7 +66,7 @@ class ScavBot:
         self.gpg.stop()
         print("MADE IT!")
 
-    def circum_navigate(self):
+    def circum_navigate(self, color):
         # Set the speed to medium speed
         self.gpg.set_speed(self.params['m_spd'])
         print("I will now cicle the cone at {} mm ".format(self.params['radius']))
@@ -55,9 +74,14 @@ class ScavBot:
         # Circumscibe a circle around the cone
         # rotate gpg 90 degrees to prep for the orbit
         self.gpg.turn_degrees(-90)
+        self.servo.rotate_servo(30)
 
         # Complete the orbit
-        self.gpg.orbit(180, (2*self.params['radius']/10))
+        self.gpg.orbit(20, (2*self.params['radius']/10))
+        picture_path = os.path.join(self.image_dir, color)
+        if not os.path.exists(picture_path):
+            os.makedirs(picture_path)      
+        take_picture(picture_path)
 
         # Rotate back to facing the cone
         self.gpg.turn_degrees(90)
@@ -67,6 +91,11 @@ class ScavBot:
         # Return to a base position
         print("That was fun... I go home now") 
         self.gpg.drive_cm(-20,True)
+
+    def main(self):
+        self.center_cone('orange')
+        self.drive_to_cone()
+        self.circum_navigate('orange')
 
 if __name__ == '__main__':
     import config
