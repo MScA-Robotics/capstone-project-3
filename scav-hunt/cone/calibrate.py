@@ -2,6 +2,7 @@ import os
 import picamera
 import numpy as np
 import cv2
+import json
 
 
 def take_picture(name=None, path=None):
@@ -90,7 +91,6 @@ def get_hsv_boundaries(imgPath):
 
 if __name__ == '__main__':
     from datetime import date
-    import json
     
     colors = ['blue', 'orange']
     
