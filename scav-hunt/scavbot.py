@@ -93,9 +93,12 @@ class ScavBot:
         if turn_90:
             self.servo.rotate_servo(100)
             self.gpg.turn_degrees(90)
+            self.gpg.drive_cm(-20)
             take_picture(picture_path)
+            self.gpg.drive_cm(20)
             self.gpg.turn_degrees(-90)
             self.servo.rotate_servo(30)
+
         else:
             take_picture(picture_path)
 
