@@ -78,25 +78,11 @@ class ScavBot:
         self.servo.rotate_servo(30)
 
         # Complete the orbit
-        self.gpg.orbit(20, (2*self.params['radius']/10))
-        picture_path = os.path.join(self.image_dir, color)
-        if not os.path.exists(picture_path):
-            os.makedirs(picture_path)      
-        take_picture(picture_path)
-
-        self.gpg.orbit(60, (2*self.params['radius']/10))
-        picture_path = os.path.join(self.image_dir, color)
-        if not os.path.exists(picture_path):
-            os.makedirs(picture_path)      
-        take_picture(picture_path)
-
-        self.gpg.orbit(60, (2*self.params['radius']/10))
-        picture_path = os.path.join(self.image_dir, color)
-        if not os.path.exists(picture_path):
-            os.makedirs(picture_path)      
-        take_picture(picture_path)
-
-        self.gpg.orbit(40, (2*self.params['radius']/10))
+        radius = 2*self.params['radius']/10
+        orbit_and_take_picture(20, radius, color)
+        orbit_and_take_picture(100, radius, color)
+        orbit_and_take_picture(110, radius, color)
+        self.gpg.orbit(40, radius)
 
         # Rotate back to facing the cone
         self.gpg.turn_degrees(90)
@@ -106,6 +92,13 @@ class ScavBot:
         # Return to a base position
         print("That was fun... I go home now") 
         self.gpg.drive_cm(-20,True)
+
+    def orbit_and_take_picture(self, degrees, radius, color):
+        self.gpg.orbit(degrees, radius)
+        picture_path = os.path.join(self.image_dir, color)
+        if not os.path.exists(picture_path):
+            os.makedirs(picture_path)      
+        take_picture(picture_path)
 
     def main(self):
         self.center_cone('orange')
