@@ -60,7 +60,7 @@ class ScavBot:
 
         # Back away to the exact distance at a slower speed
         self.gpg.set_speed(self.params['l_spd'])
-        while ob_dist < self.params['cone_dist']:
+        while ob_dist < self.params['radius']:
             self.gpg.backward()
             ob_dist = self.dist_sensor.read_mm()
             print("Distance Sensor Reading: {} mm ".format(ob_dist))  
@@ -79,26 +79,25 @@ class ScavBot:
 
         # Complete the orbit
         radius = 2*self.params['radius']/10
-        self.orbit_and_take_picture(20, radius, color)
-        self.orbit_and_take_picture(100, radius, color)
+        self.orbit_and_take_picture(40, radius, color)
+        self.orbit_and_take_picture(100, radius, color, turn_90=True)
         self.orbit_and_take_picture(110, radius, color)
-        self.gpg.orbit(40, radius)
+        self.orbit_and_take_picture(40, radius, color)
 
-        # Rotate back to facing the cone
-        self.gpg.turn_degrees(90)
-        ob_dist = self.dist_sensor.read_mm()
-        print("The cone is now at: {} mm ".format(ob_dist))
-
-        # Return to a base position
-        print("That was fun... I go home now") 
-        self.gpg.drive_cm(-20,True)
-
-    def orbit_and_take_picture(self, degrees, radius, color):
+    def orbit_and_take_picture(self, degrees, radius, color, turn_90=False):
         self.gpg.orbit(degrees, radius)
         picture_path = os.path.join(self.image_dir, color)
         if not os.path.exists(picture_path):
-            os.makedirs(picture_path)      
-        take_picture(picture_path)
+            os.makedirs(picture_path)
+
+        if turn_90:
+            self.servo.rotate_servo(100)
+            self.gpg.turn_degrees(90)
+            take_picture(picture_path)
+            self.gpg.turn_degrees(-90)
+            self.servo.rotate_servo(30)
+        else:
+            take_picture(picture_path)
 
     def main(self):
         self.center_cone('orange')
