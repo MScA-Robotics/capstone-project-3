@@ -52,7 +52,7 @@ class ScavBot:
         # Drive to cone at full bore
         self.gpg.set_speed(self.params['h_spd'])
         ob_dist = self.dist_sensor.read_mm()
-        while ob_dist >= self.params['radius']:
+        while ob_dist >= self.params['cone_dist']:
             self.gpg.forward()
             ob_dist = self.dist_sensor.read_mm()
             print("Distance Sensor Reading: {} mm ".format(ob_dist))
@@ -60,7 +60,7 @@ class ScavBot:
 
         # Back away to the exact distance at a slower speed
         self.gpg.set_speed(self.params['l_spd'])
-        while ob_dist < self.params['radius']:
+        while ob_dist < self.params['cone_dist']:
             self.gpg.backward()
             ob_dist = self.dist_sensor.read_mm()
             print("Distance Sensor Reading: {} mm ".format(ob_dist))  
@@ -79,9 +79,9 @@ class ScavBot:
 
         # Complete the orbit
         radius = 2*self.params['radius']/10
-        orbit_and_take_picture(20, radius, color)
-        orbit_and_take_picture(100, radius, color)
-        orbit_and_take_picture(110, radius, color)
+        self.orbit_and_take_picture(20, radius, color)
+        self.orbit_and_take_picture(100, radius, color)
+        self.orbit_and_take_picture(110, radius, color)
         self.gpg.orbit(40, radius)
 
         # Rotate back to facing the cone
