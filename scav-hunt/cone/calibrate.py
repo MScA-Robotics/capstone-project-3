@@ -89,6 +89,14 @@ def get_hsv_boundaries(imgPath):
     return boundaries
 
 
+def load_boundaries(json_path):
+    boundaries_dict = json.load(json_path)
+    parsed_dict = {}
+    for k,v in boundaries_dict:
+        parsed_dict[k] = eval(v)
+    return parsed_dict
+    
+
 if __name__ == '__main__':
     from datetime import date
     
