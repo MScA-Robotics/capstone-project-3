@@ -118,3 +118,6 @@ venv.bak/
 
 # Model directories
 *_model
+
+# Boundaries files
+*.json
