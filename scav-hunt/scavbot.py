@@ -18,6 +18,7 @@ class ScavBot:
         
         self.params = params
         self.boundaries = boundaries
+        self.image_dir = image_dir
 
         # Image Model
         self.image_model = ObjectClassificationModel( 
@@ -59,7 +60,7 @@ class ScavBot:
 
         # Back away to the exact distance at a slower speed
         self.gpg.set_speed(self.params['l_spd'])
-        while ob_dist < rad:
+        while ob_dist < self.params['radius']:
             self.gpg.backward()
             ob_dist = self.dist_sensor.read_mm()
             print("Distance Sensor Reading: {} mm ".format(ob_dist))  
