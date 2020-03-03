@@ -126,4 +126,3 @@ if __name__ == '__main__':
         params=config.params,
         boundaries = boundaries_dict
     )
-
