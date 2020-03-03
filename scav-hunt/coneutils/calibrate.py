@@ -102,7 +102,7 @@ def load_boundaries(json_path):
 if __name__ == '__main__':
     from datetime import date
     
-    colors = ['orange']
+    colors = ['orange', 'yellow', 'green', 'blue']
     
     picture_path = '/home/pi/Pictures/cone_calibration/{}'.format(str(date.today()))
     if not os.path.exists(picture_path):
