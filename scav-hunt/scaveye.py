@@ -44,6 +44,9 @@ class ObjectClassificationModel:
         # Load the model 
         PATH_TO_CKPT = os.path.join(CWD_PATH, model_dir, graph_name)
         self.interpreter = Interpreter(model_path=PATH_TO_CKPT)
+        self.interpreter.allocate_tensors()
+
+        # Get model details
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
         self.height = self.input_details[0]['shape'][1]
@@ -83,11 +86,24 @@ class ObjectClassificationModel:
             scores = self.interpreter.get_tensor(self.output_details[2]['index'])[0] # Confidence of detected objects
             # num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
 
-            classes_list.append(classes)
-            scores_list.append(scores)
+            classes_list.append(classes[scores > self.min_conf_threshold])
+            scores_list.append(scores[scores > self.min_conf_threshold])
 
-        return classes_list, scores_list
+        objects_detected = {}
+        for classes in classes_list:
+            objects = set([self.labels[int(c)] for c in classes])
+            for obj in objects:
+                if obj in objects_detected.keys():
+                    objects_detected[obj] += 1
+                else:
+                    objects_detected[obj] = 1
+
+        return classes_list, scores_list, objects_detected
 
 
+if __name__ == '__main__':
+
+    model = ObjectClassificationModel('Sample_TFLite_model', '/home/pi/Pictures/scav_hunt')
+    classes, scores, objects = model.classify(os.path.join(model.image_dir, 'archive/orange'))
 
 
