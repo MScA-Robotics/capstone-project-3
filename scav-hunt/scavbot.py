@@ -48,14 +48,21 @@ class ScavBot:
                 centered = True
         return True
         
-    def drive_to_cone(self):
+    def drive_to_cone(self, color):
+        self.center_cone(color)
+
         # Drive to cone at full bore
         self.gpg.set_speed(self.params['h_spd'])
         ob_dist = self.dist_sensor.read_mm()
+        t0 = time.time()
         while ob_dist >= self.params['cone_dist']:
             self.gpg.forward()
             ob_dist = self.dist_sensor.read_mm()
-            print("Distance Sensor Reading: {} mm ".format(ob_dist))
+            # Every three seconds, recenter the cone
+            if time.time() - t0 > 3:
+                self.gpg.stop()
+                self.center_cone(color)
+                t0 = time.time()
         self.gpg.stop()
 
         # Back away to the exact distance at a slower speed
@@ -115,7 +122,7 @@ if __name__ == '__main__':
 
     bot = ScavBot(
         image_model_dir='Sample_TFLite_model', 
-        image_dir='/home/pi/Pictures',
+        image_dir='/home/pi/Pictures/scav_hunt',
         params=config.params,
         boundaries = boundaries_dict
     )
