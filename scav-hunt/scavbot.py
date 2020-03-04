@@ -103,6 +103,8 @@ class ScavBot:
         self.orbit_and_take_picture(100, radius, color, turn_90=True)
         self.orbit_and_take_picture(110, radius, color)
         self.orbit_and_take_picture(40, radius, color)
+        
+        self.servo.rotate_servo(100)
 
     def orbit_and_take_picture(self, degrees, radius, color, turn_90=False):
         self.gpg.orbit(degrees, radius)
