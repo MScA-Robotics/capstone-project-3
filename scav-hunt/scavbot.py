@@ -109,10 +109,10 @@ class ScavBot:
         else:
             take_picture(picture_path)
 
-    def main(self):
-        self.center_cone('orange')
-        self.drive_to_cone()
-        self.circum_navigate('orange')
+    def main(self, color):
+        self.center_cone(color)
+        self.drive_to_cone(color)
+        self.circum_navigate(color)
 
 if __name__ == '__main__':
     import config
