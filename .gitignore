@@ -121,3 +121,6 @@ venv.bak/
 
 # Boundaries files
 *.json
+
+# logs
+logs/

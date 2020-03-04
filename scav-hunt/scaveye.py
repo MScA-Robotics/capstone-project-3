@@ -15,9 +15,10 @@ def take_picture(path):
         path = "/home/pi/Pictures"
     camera = picamera.PiCamera()
     try:
-       camera.capture(os.path.join(path, "image_{0}.jpg".format(datetime.now().strftime('%m%d%Y%H%M%S'))))
+        camera.capture(os.path.join(path, "image_{0}.jpg".format(datetime.now().strftime('%m%d%Y%H%M%S'))))
     finally:
-       camera.close()
+        print('Picture taken')
+        camera.close()
 
 
 class ObjectClassificationModel:
@@ -57,7 +58,6 @@ class ObjectClassificationModel:
 
     def classify(self, image_dir):
         images = glob.glob(image_dir + '/*')
-        print(images)
         classes_list = []
         scores_list = []
         for image_path in images:

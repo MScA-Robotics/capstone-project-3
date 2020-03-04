@@ -1,6 +1,6 @@
 import os
 import time
-from datetime import datetime
+from datetime import datetime, date
 
 from easygopigo3 import EasyGoPiGo3
 import picamera
@@ -10,7 +10,7 @@ from coneutils import detect
 
 class ScavBot:
 
-    def __init__(self, image_model_dir, image_dir, params, boundaries):
+    def __init__(self, image_model_dir, image_dir, params, boundaries, log_dir='logs'):
         self.gpg = EasyGoPiGo3()
         self.dist_sensor = self.gpg.init_distance_sensor()
         self.servo = self.gpg.init_servo("SERVO1")
@@ -24,12 +24,23 @@ class ScavBot:
         self.image_model = ObjectClassificationModel( 
             model_dir = image_model_dir,
             image_dir = image_dir)
+
+        # Log File
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        self.log_path = os.path.join(log_dir, 'log_'+ str(date.today())+'.txt')
+
+    def log(self, txt):
+        with open(self.log_path, 'a') as f:
+            f.write(txt)
+            f.write('\n')
         
     def find_cone(self, color):
         bounds = self.boundaries[color]
         return detect.findCone(bounds)
 
     def center_cone(self, color):
+        print('Finding {} cone'.format(color))
         centered = False
         current_degree = 0 
         while not centered:
@@ -46,11 +57,12 @@ class ScavBot:
                 self.gpg.turn_degrees(-10)
             else:
                 centered = True
+        print('Found {} cone!'.format(color))
         return True
         
     def drive_to_cone(self, color):
         self.center_cone(color)
-
+        print('Driving to {} cone'.format(color))
         # Drive to cone at full bore
         self.gpg.set_speed(self.params['h_spd'])
         ob_dist = self.dist_sensor.read_mm()
@@ -61,16 +73,17 @@ class ScavBot:
             # Every three seconds, recenter the cone
             if time.time() - t0 > 3:
                 self.gpg.stop()
+                print('Recentering')
                 self.center_cone(color)
                 t0 = time.time()
         self.gpg.stop()
+        print("Distance Sensor Reading: {} mm ".format(ob_dist))
 
         # Back away to the exact distance at a slower speed
         self.gpg.set_speed(self.params['l_spd'])
         while ob_dist < self.params['radius']:
             self.gpg.backward()
             ob_dist = self.dist_sensor.read_mm()
-            print("Distance Sensor Reading: {} mm ".format(ob_dist))  
         self.gpg.stop()
         print("MADE IT!")
 
@@ -105,14 +118,23 @@ class ScavBot:
             self.gpg.drive_cm(20)
             self.gpg.turn_degrees(-90)
             self.servo.rotate_servo(30)
-
         else:
             take_picture(picture_path)
+
+    def classify_and_log(self, color):
+        image_dir = os.path.join(self.image_model.image_dir, color)
+        classes, probs, objects = self.image_model.classify(image_dir)
+        txt = ','.join([str(datetime.now()), color, str(objects)])
+        self.log(txt)
+        print('Logged: ', txt)
+        return txt
 
     def main(self, color):
         self.center_cone(color)
         self.drive_to_cone(color)
         self.circum_navigate(color)
+        self.classify_and_log(color)
+
 
 if __name__ == '__main__':
     import config
