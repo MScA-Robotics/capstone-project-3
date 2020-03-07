@@ -46,6 +46,7 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+Aiste Austrevicius 2:20 PM
 
 # Translations
 *.mo
@@ -81,6 +82,9 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
+# Mac Finder Settings
+*.DS_Store
+
 # Environments
 .env
 .venv
@@ -108,3 +112,12 @@ venv.bak/
 
 # Audio files
 *.wav
+
+# Images
+*.jpg
+
+# Model directories
+*_model
+
+# Boundaries files
+*.json

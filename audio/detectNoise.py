@@ -2,6 +2,7 @@ import pyaudio
 import math
 import struct
 import wave
+<<<<<<< HEAD
 import sys
 
 from scipy.io.wavfile import write
@@ -201,6 +202,7 @@ def removeNoise(
 
 
 
+
 #Assuming Energy threshold upper than 30 dB
 Threshold = 30
 
@@ -266,6 +268,7 @@ def filter_stream (stream):
     data = new_sig.tobytes()
 
 
+
 def WriteSpeech(WriteData):
     stream.stop_stream()
     stream.close()
@@ -302,6 +305,7 @@ def listen(silence,Time):
             input = GetStream(chunk)
         except:
             continue
+
         filtered = filter_stream(input)
         rms_value = rms(filtered)
         if (rms_value > Threshold):
@@ -324,12 +328,3 @@ stream = p.open(format = FORMAT,
     frames_per_buffer = chunk)
 
 listen(silence,Time)
-
-
-
-
-
-
-
-
-

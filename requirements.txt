@@ -1,0 +1,6 @@
+numpy
+picamera
+
+# Audio
+soundfile
+sounddevice

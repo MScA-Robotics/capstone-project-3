@@ -10,6 +10,7 @@ from easygopigo3 import EasyGoPiGo3
 import coneDetection
 import colorDetection
 import circumNav
+import conecolor
 
 DIR_PATH = '/home/pi/Desktop/cone_images/'
 
@@ -17,7 +18,7 @@ class ConeBot:
 
     def __init__(self, dir_path, params=None):
         self.dir_path = dir_path
-        self.calibrated = False
+        self.calibrated = True
         self.gpg = EasyGoPiGo3()
         if params is None:
             self.rad= 200
@@ -67,15 +68,29 @@ class ConeBot:
         circumNav.circumNav(self.gpg)
 
     def solve_q1_task(self):
+        self.boundaries=boundaries["purplecone"]    #Clean up this
         self.centerCone()
-        self.circumNavigate()
+        self.circumNavigate()   # Modify the code so that it stops the bot and recenters every meter
+
+        self.boundaries=boundaries["orangecone"]    #Clean up this
+        self.centerCone()
+        self.circumNavigate()   # Modify the code so that it stops the bot and recenters every meter
 
 
 bot = ConeBot(DIR_PATH)
-boundaries = bot.calibrate()
-print(boundaries)
+#boundaries = bot.calibrate()
+boundaries= conecolor.conehsv()
+#print(boundaries)
+#print(boundaries["purplecone"])
 
-cone = bot.findCone()
+#cone = bot.findCone()
+bot.solve_q1_task()
+
+
+# for boundary in boundaries.keys:
+#     print(boundary)
+#     cone = bot.findCone(boundary)
+#     bot.solve_q1_task()
 print(cone)
 
-# bot.solve_q1_task()
+
