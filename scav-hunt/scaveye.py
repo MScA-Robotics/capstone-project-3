@@ -217,6 +217,7 @@ class ObjectClassificationModel:
             max_object = most_common
             print('Maximum detected object :{}'.format(max_object))
             print(Counter(collect_labels))
+        return max_object
 
 
 if __name__ == '__main__':
