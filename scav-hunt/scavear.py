@@ -42,12 +42,39 @@ class Listener:
     def _db_to_amp(x,):
         return librosa.core.db_to_amplitude(x, ref=1.0)
 
-    def __init__(self, noise_path='noise'):
+    def __init__(self, 
+                 noise_path='noise',
+                 Threshold = 30,
+                 SHORT_NORMALIZE = (1.0/32768.0),
+                 chunk = 4096,
+                 FORMAT = pyaudio.paInt16,
+                 CHANNELS = 1,
+                 RATE = 44100,
+                 swidth = 2,
+                 Max_Seconds = 10,
+                 silence = True,
+                 FileNameTmp = 'test2.wav',
+                 Time=0,
+                 all_=[]):
+
+        self.Threshold = Threshold
+        self.SHORT_NORMALIZE = SHORT_NORMALIZE
+        self.chunk = chunk
+        self.FORMAT = FORMAT
+        self.CHANNELS = CHANNELS
+        self.RATE = RATE
+        self.swidth = swidth
+        self.Max_Seconds = Max_Seconds
+        self.FileNameTmp = FileNameTmp
+        self.Time = Time
+        self.all = all_
+
+        self.TimeoutSignal=int((RATE / chunk * Max_Seconds) + 2),
+
         self.noise_thresh = np.load(os.path.join(noise_path, 'noise_thresh.npy'))
         self.mean_freq_noise = np.load(os.path.join(noise_path, 'mean_freq.npy'))
         self.std_freq_noise = np.load(os.path.join(noise_path, 'std_freq.npy'))
         self.noise_stft_db = np.load(os.path.join(noise_path, 'noise_db.npy'))
-
 
     def removeNoise(
         audio_clip,
@@ -127,6 +154,30 @@ class Listener:
         )
         return recovered_signal
 
+    def rms(self, frame):
+        count = len(frame)/self.swidth
+        format = "%dh"%(count)
+        # short is 16 bit int
+        shorts = struct.unpack(format, self.frame)
+        sum_squares = 0.0
+        for sample in shorts:
+            n = sample * self.SHORT_NORMALIZE
+            sum_squares += n*n
+        # compute the rms 
+        rms = math.pow(sum_squares/count, 0.5);
+        return rms * 1000
+
+    def filter_stream(self, stream):
+        #convert bytestream to 16bit PCM
+        sig = np.frombuffer(stream, dtype='<i2').reshape(-1, CHANNELS)
+        # Change shape and type for noise removal function
+        sig = sig.T[0].astype('float')
+        #GoPiGo noise removal
+        output = removeNoise(
+            audio_clip=sig,
+            n_std_thresh=2,
+            prop_decrease=0.95)
+        return(output)
 
 
 
