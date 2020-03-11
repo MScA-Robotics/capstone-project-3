@@ -1,3 +1,4 @@
+#Changes by Raghav for video classification
 import os
 import glob
 import picamera
@@ -5,6 +6,8 @@ import cv2
 import numpy as np
 import importlib.util
 from datetime import datetime
+import videorecorder as vr
+import time
 
 # If using TPU, need to load a different library
 from tensorflow.lite.python.interpreter import Interpreter
@@ -19,6 +22,21 @@ def take_picture(path):
     finally:
         print('Picture taken')
         camera.close()
+
+def record_video(path=None,cone_color='green',duration=5,runid=0):
+    if path is None:
+        path="/home/pi/Videos"
+    path = os.path.join(path,cone_color)
+    try:
+        recorder = vr.VideoRecorder(path,runid)
+        print('Loaded Video Recorder')
+        recorder.start_recording()
+        time.sleep(duration)
+        recorder.stop_recording()
+    except:
+        print('Video Recording failed')
+    finally:
+        print('Video recorded')
 
 
 class ObjectClassificationModel:
@@ -99,7 +117,10 @@ class ObjectClassificationModel:
                     objects_detected[obj] = 1
 
         return classes_list, scores_list, objects_detected
-
+    
+    
+    def classify_video(self, video_dir):
+        pass
 
 if __name__ == '__main__':
 

@@ -5,11 +5,10 @@ from datetime import datetime, date
 from easygopigo3 import EasyGoPiGo3
 import picamera
 
-from scaveye import ObjectClassificationModel, take_picture
+from scaveye import ObjectClassificationModel, take_picture, record_video
 from coneutils import detect
 
 class ScavBot:
-
     def __init__(self, image_model_dir, image_dir, params, boundaries, log_dir='logs'):
         self.gpg = EasyGoPiGo3()
         self.dist_sensor = self.gpg.init_distance_sensor()
