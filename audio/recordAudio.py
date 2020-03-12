@@ -15,6 +15,8 @@ def record_chunk(record_secs = 5,
 
     # create pyaudio stream
     stream = audio.open(format = form_1,rate = samp_rate,channels = chans, \
+                    #input_device_index = dev_index,
+                    input = True, \
                     input_device_index = dev_index,input = True, \
                     frames_per_buffer=chunk)
     print("recording")
