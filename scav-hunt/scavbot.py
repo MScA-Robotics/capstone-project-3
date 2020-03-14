@@ -8,6 +8,7 @@ import picamera
 from scaveye import ObjectClassificationModel, take_picture
 from coneutils import detect
 
+
 class ScavBot:
 
     def __init__(self, image_model_dir, image_dir, params, boundaries, log_dir='logs'):
@@ -142,6 +143,8 @@ if __name__ == '__main__':
     import config
     from coneutils import calibrate
 
+    from scavear import Listener
+
     boundaries_dict = calibrate.load_boundaries('coneutils/boundaries.json')
 
     bot = ScavBot(
@@ -150,3 +153,5 @@ if __name__ == '__main__':
         params=config.params,
         boundaries = boundaries_dict
     )
+
+    l = Listener()
