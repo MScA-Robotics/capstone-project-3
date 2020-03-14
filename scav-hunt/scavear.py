@@ -77,6 +77,7 @@ class Listener:
         self.noise_stft_db = np.load(os.path.join(noise_path, 'noise_db.npy'))
 
     def remove_noise(
+        self,
         audio_clip,
         n_grad_freq=2,
         n_grad_time=4,
@@ -154,22 +155,24 @@ class Listener:
         )
         return recovered_signal
 
-    def rms(self, frame):
+    def rms(self, frame, bytestream = True):
         count = len(frame)/self.swidth
-        format = "%dh"%(count)
-        # short is 16 bit int
-        shorts = struct.unpack(format, self.frame)
+        if (bytestream):
+            fmt = "%dh"%(count)
+            # short is 16 bit int
+            frame = struct.unpack(fmt, frame)
+
         sum_squares = 0.0
-        for sample in shorts:
+        for sample in frame:
             n = sample * self.SHORT_NORMALIZE
             sum_squares += n*n
         # compute the rms 
-        rms = math.pow(sum_squares/count, 0.5);
+        rms = math.pow(sum_squares/count,0.5);
         return rms * 1000
 
     def filter_stream(self, stream):
         #convert bytestream to 16bit PCM
-        sig = np.frombuffer(stream, dtype='<i2').reshape(-1, CHANNELS)
+        sig = np.frombuffer(stream, dtype='<i2').reshape(-1, self.CHANNELS)
         # Change shape and type for noise removal function
         sig = sig.T[0].astype('float')
         #GoPiGo noise removal
@@ -191,12 +194,12 @@ class Listener:
         return self.stream
 
     def listen(self, with_filter = False):
+        self.open_stream()
         print("listening now...")
         silence = True
         while silence:
             try:
-                input = self.stream.read(CHUNK)
-                print('new stream chunk')
+                input = self.stream.read(self.CHUNK)
             except:
                 continue
             if (with_filter):
@@ -211,3 +214,6 @@ class Listener:
                 silence = False
                 # trigger recording function here
 
+if __name__ == '__main__':
+
+    l = Listener()
