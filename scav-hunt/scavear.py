@@ -44,9 +44,9 @@ class Listener:
 
     def __init__(self, 
                  noise_path='noise',
-                 Threshold = 30,
+                 THRESHOLD = 30,
                  SHORT_NORMALIZE = (1.0/32768.0),
-                 chunk = 4096,
+                 CHUNK = 4096,
                  FORMAT = pyaudio.paInt16,
                  CHANNELS = 1,
                  RATE = 44100,
@@ -57,9 +57,9 @@ class Listener:
                  Time=0,
                  all_=[]):
 
-        self.Threshold = Threshold
+        self.THRESHOLD = THRESHOLD
         self.SHORT_NORMALIZE = SHORT_NORMALIZE
-        self.chunk = chunk
+        self.CHUNK = CHUNK
         self.FORMAT = FORMAT
         self.CHANNELS = CHANNELS
         self.RATE = RATE
@@ -69,14 +69,14 @@ class Listener:
         self.Time = Time
         self.all = all_
 
-        self.TimeoutSignal=int((RATE / chunk * Max_Seconds) + 2),
+        self.TimeoutSignal=int((RATE / CHUNK * Max_Seconds) + 2),
 
         self.noise_thresh = np.load(os.path.join(noise_path, 'noise_thresh.npy'))
         self.mean_freq_noise = np.load(os.path.join(noise_path, 'mean_freq.npy'))
         self.std_freq_noise = np.load(os.path.join(noise_path, 'std_freq.npy'))
         self.noise_stft_db = np.load(os.path.join(noise_path, 'noise_db.npy'))
 
-    def removeNoise(
+    def remove_noise(
         audio_clip,
         n_grad_freq=2,
         n_grad_time=4,
@@ -173,11 +173,41 @@ class Listener:
         # Change shape and type for noise removal function
         sig = sig.T[0].astype('float')
         #GoPiGo noise removal
-        output = removeNoise(
+        output = remove_noise(
             audio_clip=sig,
             n_std_thresh=2,
             prop_decrease=0.95)
         return(output)
 
+    def open_stream(self):
+        p = pyaudio.PyAudio()
+        self.stream = p.open(
+            format = self.FORMAT,
+            channels = self.CHANNELS,
+            rate = self.RATE,
+            input = True,
+            output = True,
+            frames_per_buffer = self.CHUNK)
+        return self.stream
 
+    def listen(self, with_filter = False):
+        print("listening now...")
+        silence = True
+        while silence:
+            try:
+                input = self.stream.read(CHUNK)
+                print('new stream chunk')
+            except:
+                continue
+            if (with_filter):
+                filtered = filter_stream(input)
+                filtered_tuple = tuple(filtered)
+                rms_value = self.rms(filtered_tuple, bytestream = False)
+            else:
+                rms_value = self.rms(input, bytestream = True)
+                print(rms_value)
+            if (rms_value > self.THRESHOLD):
+                print ("hello doubladay, you should trigger recording here....")
+                silence = False
+                # trigger recording function here
 
