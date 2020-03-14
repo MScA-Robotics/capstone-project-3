@@ -4,3 +4,6 @@ picamera
 # Audio
 soundfile
 sounddevice
+
+sklearn
+IPython
