@@ -44,6 +44,7 @@ class Listener:
 
     def __init__(self, 
                  noise_path='noise',
+                 audio_path='/home/pi/Desktop/scav_hunt/audio',
                  THRESHOLD = 30,
                  SHORT_NORMALIZE = (1.0/32768.0),
                  CHUNK = 4096,
@@ -53,7 +54,6 @@ class Listener:
                  swidth = 2,
                  Max_Seconds = 10,
                  silence = True,
-                 FileNameTmp = 'test2.wav',
                  Time=0,
                  all_=[]):
 
@@ -183,8 +183,8 @@ class Listener:
         return(output)
 
     def open_stream(self):
-        p = pyaudio.PyAudio()
-        self.stream = p.open(
+        self.p = pyaudio.PyAudio()
+        self.stream = self.p.open(
             format = self.FORMAT,
             channels = self.CHANNELS,
             rate = self.RATE,
@@ -192,6 +192,11 @@ class Listener:
             output = True,
             frames_per_buffer = self.CHUNK)
         return self.stream
+
+    def close_stream(self):
+        self.stream.stop_stream()
+        self.stream.close()
+        self.p.terminate()
 
     def listen(self, with_filter = False):
         self.open_stream()
@@ -213,6 +218,48 @@ class Listener:
                 print ("hello doubladay, you should trigger recording here....")
                 silence = False
                 # trigger recording function here
+
+    def record(self, seconds):
+        RECORD_SECONDS = seconds
+        CHUNK = self.CHUNK
+        CHANNELS = self.CHANNELS
+        RATE = self.RATE
+        FORMAT = self.FORMAT
+
+        self.open_stream()
+        for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+            data = self.stream.read(CHUNK)
+            #convert bytestream to 16bit PCM
+            sig = np.frombuffer(data, dtype='<i2').reshape(-1, CHANNELS)
+            # Change shape and type for noise removal function
+            sig = sig.T[0].astype('float')
+            #GoPiGo noise removal
+            output = self.remove_noise(
+                audio_clip=sig,
+                n_std_thresh=2,
+                prop_decrease=0.95)
+            #prep for rms calcualtion
+            filtered_output = tuple(output)
+            #RMS calculation
+            rms1 = self.rms(filtered_output)
+            print(rms1)
+            # convert filtered numpy array back to a bytestream for saving..
+            new_sig = np.array([output.astype('int')],dtype='<u2').T
+            data = new_sig.tobytes()
+            frames.append(data)
+
+        filename = self.audio_path + \
+                   'recording_' + \
+                   format(datetime.now().strftime('%m%d%Y%H%M%S')) + \
+                   '.wav'
+        wf = wave.open(filename, 'wb')
+        wf.setnchannels(CHANNELS)
+        wf.setsampwidth(self.p.get_sample_size(FORMAT))
+        wf.setframerate(RATE)
+        wf.writeframes(b''.join(frames))
+        wf.close()
+        self.close_stream()
+        return 
 
 if __name__ == '__main__':
 
