@@ -110,7 +110,7 @@ class Listener:
         sig_stft = self._stft(audio_clip, n_fft, hop_length, win_length)
         sig_stft_db = self._amp_to_db(np.abs(sig_stft))
         # Calculate value to mask dB to
-        mask_gain_dB = np.min(_amp_to_db(np.abs(sig_stft)))
+        mask_gain_dB = np.min(self._amp_to_db(np.abs(sig_stft)))
 
         # Create a smoothing filter for the mask in time and frequency
         smoothing_filter = np.outer(
@@ -145,17 +145,17 @@ class Listener:
             + np.ones(np.shape(mask_gain_dB)) * mask_gain_dB * sig_mask
         )  # mask real
         sig_imag_masked = np.imag(sig_stft) * (1 - sig_mask)
-        sig_stft_amp = (_db_to_amp(sig_stft_db_masked) * np.sign(sig_stft)) + (
+        sig_stft_amp = (self._db_to_amp(sig_stft_db_masked) * np.sign(sig_stft)) + (
             1j * sig_imag_masked
         )
         # recover the signal
-        recovered_signal = _istft(sig_stft_amp, hop_length, win_length)
-        recovered_spec = _amp_to_db(
-            np.abs(_stft(recovered_signal, n_fft, hop_length, win_length))
+        recovered_signal = self._istft(sig_stft_amp, hop_length, win_length)
+        recovered_spec = self._amp_to_db(
+            np.abs(self._stft(recovered_signal, n_fft, hop_length, win_length))
         )
         return recovered_signal
 
-    def rms(self, frame, bytestream = True):
+    def rms(self, frame, bytestream):
         count = len(frame)/self.swidth
         if (bytestream):
             fmt = "%dh"%(count)
@@ -167,7 +167,7 @@ class Listener:
             n = sample * self.SHORT_NORMALIZE
             sum_squares += n*n
         # compute the rms
-        rms = math.pow(sum_squares/count,0.5);
+        rms = math.pow(sum_squares/count,0.5)
         return rms * 1000
 
     def filter_stream(self, stream):
@@ -176,7 +176,7 @@ class Listener:
         # Change shape and type for noise removal function
         sig = sig.T[0].astype('float')
         #GoPiGo noise removal
-        output = remove_noise(
+        output = self.remove_noise(
             audio_clip=sig,
             n_std_thresh=2,
             prop_decrease=0.95)
@@ -198,7 +198,7 @@ class Listener:
         self.stream.close()
         self.p.terminate()
 
-    def listen(self, with_filter = False):
+    def listen(self, with_filter = False, print_rms=False):
         self.open_stream()
         print("listening now...")
         silence = True
@@ -213,11 +213,10 @@ class Listener:
                 rms_value = self.rms(filtered_tuple, bytestream = False)
             else:
                 rms_value = self.rms(input, bytestream = True)
-                print(rms_value)
+                if print_rms:
+                    print(rms_value)
             if (rms_value > self.THRESHOLD):
-                print ("hello doubladay, you should trigger recording here....")
                 silence = False
-                # trigger recording function here
 
     def record(self, seconds):
         RECORD_SECONDS = seconds
@@ -242,14 +241,16 @@ class Listener:
             #prep for rms calcualtion
             filtered_output = tuple(output)
             #RMS calculation
-            rms1 = self.rms(filtered_output)
-            print(rms1)
+            rms1 = self.rms(filtered_output, bytestream=False)
             # convert filtered numpy array back to a bytestream for saving..
             new_sig = np.array([output.astype('int')],dtype='<u2').T
             data = new_sig.tobytes()
             frames.append(data)
 
-        filename = self.audio_path + \
+        if not os.path.exists(self.audio_path):
+            os.makedirs(self.audio_path)
+
+        filename = self.audio_path + '/' + \
                    'recording_' + \
                    format(datetime.now().strftime('%m%d%Y%H%M%S')) + \
                    '.wav'
@@ -260,8 +261,11 @@ class Listener:
         wf.writeframes(b''.join(frames))
         wf.close()
         self.close_stream()
-        return
+        return filename
+
 
 if __name__ == '__main__':
 
     l = Listener()
+    l.listen(print_rms=False)
+    print(l.record(2))
