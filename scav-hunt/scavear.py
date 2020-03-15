@@ -42,7 +42,7 @@ class Listener:
     def _db_to_amp(x,):
         return librosa.core.db_to_amplitude(x, ref=1.0)
 
-    def __init__(self, 
+    def __init__(self,
                  noise_path='noise',
                  audio_path='/home/pi/Desktop/scav_hunt/audio',
                  THRESHOLD = 30,
@@ -65,9 +65,9 @@ class Listener:
         self.RATE = RATE
         self.swidth = swidth
         self.Max_Seconds = Max_Seconds
-        self.FileNameTmp = FileNameTmp
         self.Time = Time
         self.all = all_
+        self.audio_path = audio_path
 
         self.TimeoutSignal=int((RATE / CHUNK * Max_Seconds) + 2),
 
@@ -111,7 +111,7 @@ class Listener:
         sig_stft_db = self._amp_to_db(np.abs(sig_stft))
         # Calculate value to mask dB to
         mask_gain_dB = np.min(_amp_to_db(np.abs(sig_stft)))
-        
+
         # Create a smoothing filter for the mask in time and frequency
         smoothing_filter = np.outer(
             np.concatenate(
@@ -166,7 +166,7 @@ class Listener:
         for sample in frame:
             n = sample * self.SHORT_NORMALIZE
             sum_squares += n*n
-        # compute the rms 
+        # compute the rms
         rms = math.pow(sum_squares/count,0.5);
         return rms * 1000
 
@@ -208,7 +208,7 @@ class Listener:
             except:
                 continue
             if (with_filter):
-                filtered = filter_stream(input)
+                filtered = self.filter_stream(input)
                 filtered_tuple = tuple(filtered)
                 rms_value = self.rms(filtered_tuple, bytestream = False)
             else:
@@ -227,6 +227,7 @@ class Listener:
         FORMAT = self.FORMAT
 
         self.open_stream()
+        frames = []
         for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
             data = self.stream.read(CHUNK)
             #convert bytestream to 16bit PCM
@@ -259,7 +260,7 @@ class Listener:
         wf.writeframes(b''.join(frames))
         wf.close()
         self.close_stream()
-        return 
+        return
 
 if __name__ == '__main__':
 
