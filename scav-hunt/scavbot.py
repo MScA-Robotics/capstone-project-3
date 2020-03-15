@@ -143,8 +143,6 @@ if __name__ == '__main__':
     import config
     from coneutils import calibrate
 
-    from scavear import Listener
-
     boundaries_dict = calibrate.load_boundaries('coneutils/boundaries.json')
 
     bot = ScavBot(
@@ -153,5 +151,3 @@ if __name__ == '__main__':
         params=config.params,
         boundaries = boundaries_dict
     )
-
-    l = Listener()
