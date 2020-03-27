@@ -4,3 +4,5 @@ picamera
 # Audio
 soundfile
 sounddevice
+python_speech_features
+hmmlearn

@@ -121,3 +121,15 @@ venv.bak/
 
 # Boundaries files
 *.json
+
+# model pickles
+*.pkl
+
+# zip
+*.zip
+
+#log files
+*.log
+
+# csv files
+*.csv
