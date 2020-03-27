@@ -1,9 +1,12 @@
+sklearn
+IPython
+
+# Visual
 numpy
 picamera
 
 # Audio
 soundfile
 sounddevice
-
-sklearn
-IPython
+python_speech_features
+hmmlearn
