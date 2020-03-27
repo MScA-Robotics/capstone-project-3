@@ -1,3 +1,7 @@
+sklearn
+IPython
+
+# Visual
 numpy
 picamera
 

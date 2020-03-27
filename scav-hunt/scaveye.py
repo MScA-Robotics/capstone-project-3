@@ -1,8 +1,10 @@
 import os
+import glob
 import picamera
 import cv2
 import numpy as np
 import importlib.util
+from datetime import datetime
 
 # If using TPU, need to load a different library
 from tensorflow.lite.python.interpreter import Interpreter
@@ -13,9 +15,10 @@ def take_picture(path):
         path = "/home/pi/Pictures"
     camera = picamera.PiCamera()
     try:
-       camera.capture(os.path.join(path, "image_{0}.jpg".format(datetime.now().strftime('%m%d%Y%H%M%S'))))
+        camera.capture(os.path.join(path, "image_{0}.jpg".format(datetime.now().strftime('%m%d%Y%H%M%S'))))
     finally:
-       camera.close()
+        print('Picture taken')
+        camera.close()
 
 
 class ObjectClassificationModel:
@@ -42,6 +45,9 @@ class ObjectClassificationModel:
         # Load the model 
         PATH_TO_CKPT = os.path.join(CWD_PATH, model_dir, graph_name)
         self.interpreter = Interpreter(model_path=PATH_TO_CKPT)
+        self.interpreter.allocate_tensors()
+
+        # Get model details
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
         self.height = self.input_details[0]['shape'][1]
@@ -51,40 +57,53 @@ class ObjectClassificationModel:
         self.input_std = 127.5
 
     def classify(self, image_dir):
-        full_image_dir = os.path.join(os.getcwd(), image_dir)
         images = glob.glob(image_dir + '/*')
         classes_list = []
         scores_list = []
         for image_path in images:
+            print('Classifying: {}'.format(image_path))
             # Load image and resize to expected shape [1xHxWx3]
             image = cv2.imread(image_path)
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             imH, imW, _ = image.shape 
-            image_resized = cv2.resize(image_rgb, (width, height))
+            image_resized = cv2.resize(image_rgb, (self.width, self.height))
             input_data = np.expand_dims(image_resized, axis=0)
 
             # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
-            if floating_model:
-                input_data = (np.float32(input_data) - input_mean) / input_std
+            if self.floating_model:
+                input_data = (np.float32(input_data) - self.input_mean) / self.input_std
 
             # Perform the actual detection by running the model with the image as input
-            interpreter.set_tensor(input_details[0]['index'],input_data)
-            interpreter.invoke()
+            self.interpreter.set_tensor(self.input_details[0]['index'],input_data)
+            self.interpreter.invoke()
 
             # Retrieve detection results
             # We are not using the boxes right now since we do not need to know 
             # where picture the object is, only that it is there.
 
             # boxes = interpreter.get_tensor(output_details[0]['index'])[0] # Bounding box coordinates of detected objects
-            classes = interpreter.get_tensor(output_details[1]['index'])[0] # Class index of detected objects
-            scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
+            classes = self.interpreter.get_tensor(self.output_details[1]['index'])[0] # Class index of detected objects
+            scores = self.interpreter.get_tensor(self.output_details[2]['index'])[0] # Confidence of detected objects
             # num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
 
-            classes_list.append(classes)
-            scores_list.append(scores)
+            classes_list.append(classes[scores > self.min_conf_threshold])
+            scores_list.append(scores[scores > self.min_conf_threshold])
 
-        return classes_list, scores_list
+        objects_detected = {}
+        for classes in classes_list:
+            objects = set([self.labels[int(c)] for c in classes])
+            for obj in objects:
+                if obj in objects_detected.keys():
+                    objects_detected[obj] += 1
+                else:
+                    objects_detected[obj] = 1
+
+        return classes_list, scores_list, objects_detected
 
 
+if __name__ == '__main__':
+
+    model = ObjectClassificationModel('Sample_TFLite_model', '/home/pi/Pictures/scav_hunt')
+    classes, scores, objects = model.classify(os.path.join(model.image_dir, 'archive/orange'))
 
 
