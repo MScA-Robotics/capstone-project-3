@@ -2,10 +2,11 @@ import os
 import sys
 import struct
 import math
+import pickle
 
 import numpy as np
 import time
-from datetime import datetime
+from datetime import datetime, date
 from datetime import timedelta as td
 
 import librosa
@@ -19,9 +20,36 @@ import soundfile as sf
 import sounddevice as sd
 
 
-def record_chunk(dur = 60, fs = 44100, chans = 1, output_file = 'recording.wav'):
-    rec = sd.rec(int(dur*fs), samplerate=fs, channels=chans, blocking=True)
-    sf.write(output_file, rec, fs)
+class Scavear:
+
+    def __init__(self, model_dir, model_name, audio_output_path='data/audio', log_dir='logs'):
+        self.listener = Listener(audio_path=audio_output_path)
+        # Audio Model
+        self.model_dir = model_dir
+        self.model_name = model_name
+        with open(os.path.join(model_dir, model_name), 'rb') as model_file:
+            self.model = pickle.load(model_file)
+        # Log File
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        self.log_path = os.path.join(log_dir, 'log_'+str(date.today())+'.txt')
+
+    def listen_record_classify_log(self):
+        self.listener.listen()
+        audio_clip_path = self.listener.record(2)
+        audio_class = self.classify(audio_clip_path)
+        txt = ','.join([str(datetime.now()), audio_class])
+        self.log(txt)
+        print('Logged: ', txt)
+        return txt
+
+    def classify(self, audio_file_path):
+        return self.model.predict(audio_file_path)
+
+    def log(self, txt):
+        with open(self.log_path, 'a') as f:
+            f.write(txt)
+            f.write('\n')
 
 
 class Listener:
@@ -265,7 +293,5 @@ class Listener:
 
 
 if __name__ == '__main__':
-
-    l = Listener()
-    l.listen(print_rms=False)
-    print(l.record(2))
+    ear = Scavear(model_dir='models/audio', model_name='hmm_cvbest_f1_56437703.pkl')
+    ear.listen_record_classify_log()
