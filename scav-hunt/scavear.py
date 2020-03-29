@@ -35,14 +35,15 @@ class Scavear:
             os.makedirs(log_dir)
         self.log_path = os.path.join(log_dir, 'log_'+str(date.today())+'.txt')
 
-    def listen_record_classify_log(self):
-        self.listener.listen()
-        audio_clip_path = self.listener.record(2)
-        audio_class = self.classify(audio_clip_path)
-        txt = ','.join([str(datetime.now()), str(audio_class)])
-        self.log(txt)
-        print('Logged: ', txt)
-        return txt
+    def listen_record_classify_log(self, seconds=15):
+        start = time.time()
+        while time.time() - start < seconds:
+            self.listener.listen()
+            audio_clip_path = self.listener.record(2)
+            audio_class = self.classify(audio_clip_path)
+            txt = ','.join([str(datetime.now()), str(audio_class)])
+            self.log(txt)
+            print('Logged: ', txt)
 
     def classify(self, audio_file_path):
         return self.model.predict(audio_file_path, prediction_type = "labels")
