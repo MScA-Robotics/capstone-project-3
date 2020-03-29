@@ -18,6 +18,7 @@ import scipy.signal
 
 import soundfile as sf
 import sounddevice as sd
+from UrbanHMM import *
 
 
 class Scavear:
@@ -38,13 +39,13 @@ class Scavear:
         self.listener.listen()
         audio_clip_path = self.listener.record(2)
         audio_class = self.classify(audio_clip_path)
-        txt = ','.join([str(datetime.now()), audio_class])
+        txt = ','.join([str(datetime.now()), str(audio_class)])
         self.log(txt)
         print('Logged: ', txt)
         return txt
 
     def classify(self, audio_file_path):
-        return self.model.predict(audio_file_path)
+        return self.model.predict(audio_file_path, prediction_type = "labels")
 
     def log(self, txt):
         with open(self.log_path, 'a') as f:
