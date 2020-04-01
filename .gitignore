@@ -123,7 +123,8 @@ venv.bak/
 # Boundaries files
 *.json
 
-# model pickles
+# models
+models/
 *.pkl
 
 # zip
@@ -131,6 +132,9 @@ venv.bak/
 
 #log files
 *.log
+
+# Ignore pictures, videos and audio clips
+data/
 
 # csv files
 *.csv
