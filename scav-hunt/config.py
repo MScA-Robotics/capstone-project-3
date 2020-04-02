@@ -5,6 +5,6 @@ params = {
     'h_spd': 400,
     'm_spd': 200,
     'l_spd': 30,
-    'colors': ['green', 'blue', 'purple']
+    'colors': ['blue', 'yellow', 'green'],
     'home': 'orange'
 }
