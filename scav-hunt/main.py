@@ -24,3 +24,7 @@ listener.listen()
 
 p1 = mp.Process(target=bot.main)
 p2 = mp.Process(target=ear.listen_record_classify_log, args=(150,))
+p1.start()
+p2.start()
+p1.join()
+p2.join()
