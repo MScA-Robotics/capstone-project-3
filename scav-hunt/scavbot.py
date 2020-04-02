@@ -18,6 +18,7 @@ class ScavBot:
         self.servo.rotate_servo(100)
 
         self.params = params
+        self.home = params['home']
         self.boundaries = boundaries
         self.image_dir = image_dir
 
@@ -132,11 +133,21 @@ class ScavBot:
         print('Logged: ', txt)
         return txt
 
-    def main(self, color):
-        self.center_cone(color)
-        self.drive_to_cone(color)
-        self.circum_navigate(color)
-        self.classify_and_log(color)
+    def go_home(self):
+        self.find_cone(self.home)
+        self.drive_to_cone(self.home)
+        self.gpg.turn_degrees(-90)
+        self.gpg.orbit(180, (2 * ob_dist / 10))
+
+    def main(self, colors=None):
+        if colors is None:
+            colors = self.params['colors']
+        for color in colors:
+            self.center_cone(color)
+            self.drive_to_cone(color)
+            self.circum_navigate(color)
+            self.classify_and_log(color)
+            self.go_home()
 
 
 if __name__ == '__main__':
