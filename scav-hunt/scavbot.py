@@ -15,7 +15,7 @@ class ScavBot:
         self.gpg = EasyGoPiGo3()
         self.dist_sensor = self.gpg.init_distance_sensor()
         self.servo = self.gpg.init_servo("SERVO1")
-        self.servo.rotate_servo(100)
+        self.servo.rotate_servo(90)
 
         self.params = params
         self.home = params['home']
@@ -39,11 +39,15 @@ class ScavBot:
 
     def find_cone(self, color):
         bounds = self.boundaries[color]
-        return detect.findCone(bounds)
+        return detect.findCone(bounds, log=True, color=color)
 
     def center_cone(self, color):
         print('Finding {} cone'.format(color))
         centered = False
+        # If the cone is directly in front, the robot may not be able to see it
+        ob_dist = self.dist_sensor.read_mm()
+        if ob_dist < self.params['cone_dist']:
+            centered = True
         current_degree = 0
         while not centered:
             time.sleep(.5)
@@ -73,11 +77,11 @@ class ScavBot:
             self.gpg.forward()
             ob_dist = self.dist_sensor.read_mm()
             # Every three seconds, recenter the cone
-            if time.time() - t0 > 3:
-                self.gpg.stop()
-                print('Recentering')
-                self.center_cone(color)
-                t0 = time.time()
+            # if time.time() - t0 > 3:
+            #     self.gpg.stop()
+            #     print('Recentering')
+            #     self.center_cone(color)
+            #     t0 = time.time()
         self.gpg.stop()
         print("Distance Sensor Reading: {} mm ".format(ob_dist))
 
@@ -106,7 +110,7 @@ class ScavBot:
         self.orbit_and_take_picture(110, radius, color)
         self.orbit_and_take_picture(40, radius, color)
 
-        self.servo.rotate_servo(100)
+        self.servo.rotate_servo(90)
 
     def orbit_and_take_picture(self, degrees, radius, color, turn_90=False):
         self.gpg.orbit(degrees, radius)
@@ -115,7 +119,7 @@ class ScavBot:
             os.makedirs(picture_path)
 
         if turn_90:
-            self.servo.rotate_servo(100)
+            self.servo.rotate_servo(90)
             self.gpg.turn_degrees(90)
             self.gpg.drive_cm(-20)
             take_picture(picture_path)
@@ -153,12 +157,15 @@ class ScavBot:
 if __name__ == '__main__':
     import config
     from coneutils import calibrate
+    from datetime import date
+
+    today = str(date.today())
 
     boundaries_dict = calibrate.load_boundaries('coneutils/boundaries.json')
 
     bot = ScavBot(
-        image_model_dir='Sample_TFLite_model',
-        image_dir='/home/pi/Pictures/scav_hunt',
+        image_model_dir='models/visual/Sample_TFLite_model',
+        image_dir='data/images/{}'.format(today),
         params=config.params,
         boundaries = boundaries_dict
     )

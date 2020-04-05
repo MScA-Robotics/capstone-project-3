@@ -23,8 +23,8 @@ from UrbanHMM import *
 
 class Scavear:
 
-    def __init__(self, model_dir, model_name, audio_output_path='data/audio', log_dir='logs'):
-        self.listener = Listener(audio_path=audio_output_path)
+    def __init__(self, model_dir, model_name, audio_path, log_dir='logs'):
+        self.listener = Listener(audio_path=audio_path)
         # Audio Model
         self.model_dir = model_dir
         self.model_name = model_name
@@ -295,5 +295,13 @@ class Listener:
 
 
 if __name__ == '__main__':
-    ear = Scavear(model_dir='models/audio', model_name='hmm_cvbest_f1_56437703.pkl')
+    from datetime import date
+
+    today = str(date.today())
+
+    ear = Scavear(
+        model_dir='models/audio'.format(today),
+        model_name='hmm_cvbest_f1_56437703.pkl',
+        audio_path='data/audio/{}'.format(today)
+    )
     ear.listen_record_classify_log()
