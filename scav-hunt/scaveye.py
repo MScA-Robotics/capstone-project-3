@@ -220,6 +220,112 @@ class ObjectClassificationModel:
         return max_object
 
 
+class ConeClassificationModel:
+    def __init__(self, model_dir, image_dir, graph_name='cone_detect.tflite', min_conf_threshold=0.5, use_TPU=False):
+
+        self.model_dir = model_dir
+        self.image_dir = image_dir
+        self.min_conf_threshold = float(min_conf_threshold)
+        self.use_TPU = use_TPU
+        self._load_model(model_dir=model_dir, graph_name=graph_name)
+
+    def _load_model(self, model_dir, graph_name):
+        CWD_PATH = os.getcwd()
+
+        # Load model labels
+        PATH_TO_LABELS = os.path.join(CWD_PATH, model_dir, 'labelmap.txt')
+        with open(PATH_TO_LABELS, 'r') as f:
+            labels = [line.strip() for line in f.readlines()]
+        if labels[0] == '???':
+            del(labels[0])
+        self.labels = labels
+
+        pkg = importlib.util.find_spec('tensorflow')
+        if pkg is None:
+            from tflite_runtime.interpreter import Interpreter
+            if self.use_TPU:
+                print('Loading tflite interpreter')
+                from tflite_runtime.interpreter import load_delegate
+        else:
+            from tensorflow.lite.python.interpreter import Interpreter
+            if self.use_TPU:
+                print('Loading tflite interpreter')
+                from tflite_runtime.interpreter import load_delegate
+
+        # If using Edge TPU, assign filename for Edge TPU model
+        if self.use_TPU:
+            # If user has specified the name of the .tflite file, use that name, otherwise use default 'edgetpu.tflite'
+            if (graph_name == 'cone_detect.tflite'):
+                graph_name = 'cone_edgetpu.tflite'
+        # Load the model 
+        PATH_TO_CKPT = os.path.join(CWD_PATH, model_dir, graph_name)
+        #self.interpreter = Interpreter(model_path=PATH_TO_CKPT)
+        # Load the Tensorflow Lite model.
+        # If using Edge TPU, use special load_delegate argument
+        if self.use_TPU:
+            self.interpreter = Interpreter(model_path=PATH_TO_CKPT,
+                                    experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
+            print(PATH_TO_CKPT)
+        else:
+            self.interpreter = Interpreter(model_path=PATH_TO_CKPT)
+        self.interpreter.allocate_tensors()
+
+        # Get model details
+        self.input_details = self.interpreter.get_input_details()
+        self.output_details = self.interpreter.get_output_details()
+        self.height = self.input_details[0]['shape'][1]
+        self.width = self.input_details[0]['shape'][2]
+        self.floating_model = (self.input_details[0]['dtype'] == np.float32)
+        self.input_mean = 127.5
+        self.input_std = 127.5
+
+    def classify(self, image_dir):
+        images = glob.glob(image_dir + '/*.jpg')
+        classes_list = []
+        scores_list = []
+        boxes_list =[]
+        for image_path in images:
+            print('Classifying: {}'.format(image_path))
+            # Load image and resize to expected shape [1xHxWx3]
+            image = cv2.imread(image_path)
+            image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            imH, imW, _ = image.shape 
+            image_resized = cv2.resize(image_rgb, (self.width, self.height))
+            input_data = np.expand_dims(image_resized, axis=0)
+
+            # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
+            if self.floating_model:
+                input_data = (np.float32(input_data) - self.input_mean) / self.input_std
+
+            # Perform the actual detection by running the model with the image as input
+            self.interpreter.set_tensor(self.input_details[0]['index'],input_data)
+            self.interpreter.invoke()
+
+            # Retrieve detection results
+            # We are not using the boxes right now since we do not need to know 
+            # where picture the object is, only that it is there.
+
+            boxes = self.interpreter.get_tensor(self.output_details[0]['index'])[0] # Bounding box coordinates of detected objects
+            classes = self.interpreter.get_tensor(self.output_details[1]['index'])[0] # Class index of detected objects
+            scores = self.interpreter.get_tensor(self.output_details[2]['index'])[0] # Confidence of detected objects
+            # num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
+            boxes_list.append(boxes[scores > self.min_conf_threshold])
+            classes_list.append(classes[scores > self.min_conf_threshold])
+            scores_list.append(scores[scores > self.min_conf_threshold])
+
+        objects_detected = {}
+        for classes in classes_list:
+            objects = set([self.labels[int(c)] for c in classes])
+            for obj in objects:
+                if obj in objects_detected.keys():
+                    objects_detected[obj] += 1
+                else:
+                    objects_detected[obj] = 1
+
+        return boxes_list,classes_list, scores_list, objects_detected
+
+
+
 if __name__ == '__main__':
 
     model = ObjectClassificationModel('Sample_TFLite_model', '/home/pi/Pictures/scav_hunt')
