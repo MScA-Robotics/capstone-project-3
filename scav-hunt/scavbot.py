@@ -5,11 +5,11 @@ from datetime import datetime, date
 from easygopigo3 import EasyGoPiGo3
 import picamera
 
-from scaveye import ObjectClassificationModel, take_picture, record_video
+from scaveye import ObjectClassificationModel, ConeClassificationModel, take_picture, record_video
 from coneutils import detect
 
 class ScavBot:
-    def __init__(self, image_model_dir, image_dir, params, boundaries, log_dir='logs'):
+    def __init__(self, image_model_dir, cone_model_dir, image_dir, params, boundaries, log_dir='logs'):
         self.gpg = EasyGoPiGo3()
         self.dist_sensor = self.gpg.init_distance_sensor()
         self.servo = self.gpg.init_servo("SERVO1")
@@ -23,6 +23,14 @@ class ScavBot:
         self.image_model = ObjectClassificationModel( 
             model_dir = image_model_dir,
             image_dir = image_dir)
+        
+        # Cone Detection Model
+        self.cone_model = ConeClassificationModel( 
+            model_dir = cone_model_dir,
+            image_dir = image_dir,
+            graph_name = 'cone_detect.tflite',
+            0.5,
+            True)
 
         # Log File
         if not os.path.exists(log_dir):
@@ -34,9 +42,15 @@ class ScavBot:
             f.write(txt)
             f.write('\n')
         
-    def find_cone(self, color):
-        bounds = self.boundaries[color]
-        return detect.findCone(bounds)
+#    #OPENCV cone detection (Enable this code if you were to use OPENCV)
+#     def find_cone(self, color):
+#         bounds = self.boundaries[color]
+#         return detect.findCone(bounds)
+
+    #Cone detection using the SSD cone detection model
+    def find_cone(self,color):
+        cones = cone_model.classify(image_dir)
+        return cone_model.findcone(color,cones)     
 
     def center_cone(self, color):
         print('Finding {} cone'.format(color))

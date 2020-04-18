@@ -289,7 +289,8 @@ class ConeClassificationModel:
             # Load image and resize to expected shape [1xHxWx3]
             image = cv2.imread(image_path)
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            imH, imW, _ = image.shape 
+            imH, imW, _ = image.shape
+            #print(imW)
             image_resized = cv2.resize(image_rgb, (self.width, self.height))
             input_data = np.expand_dims(image_resized, axis=0)
 
@@ -314,6 +315,7 @@ class ConeClassificationModel:
             scores_list.append(scores[scores > self.min_conf_threshold])
 
         objects_detected = {}
+        test=[1]
         for classes in classes_list:
             objects = set([self.labels[int(c)] for c in classes])
             for obj in objects:
@@ -321,10 +323,7 @@ class ConeClassificationModel:
                     objects_detected[obj] += 1
                 else:
                     objects_detected[obj] = 1
-
-        return boxes_list,classes_list, scores_list, objects_detected
-
-
+        return boxes_list,classes_list, scores_list, objects_detected, imW
 
 if __name__ == '__main__':
 
