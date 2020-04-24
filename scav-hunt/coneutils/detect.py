@@ -139,27 +139,27 @@ def findCone(colorBounds = [([119, 82, 29],[135, 225, 96])], imageSource = "came
         return False
 
 #The chose_cone definition is not yet  completed.
-def findcone_mod(self, color, cones):
-bounding_Rects = []
-centers = []        
+def findcone_mod(color, cones):
+    bounding_Rects = []
+    centers = []
+    #print(cones)
+    #print(color)
                 
-for cone in cones
-    if cones[1][cone] = color:
-        bounding_Rects = cones[0][0]
-        cones[0][0][]
-        
-#                 center = rect[0]+rect[2] - rect[2]/2
-#                 centers.append(center)               
+    for cone in [cones]:
+        print(cone)
+        if cone[1][0] == color:
+            rect= cone[0][0][0]
+            bounding_Rects.append(rect)
 
+    #horizontal centers
+    centers = []
+    for rect in bounding_Rects:
+        center = rect[0]+rect[2]-rect[2]/2
+        centers.append(center)
+    #return horizontal position of (first) found cone
+    try:
+        #return round(centers[0]/width,5)
+        return round(centers[0]/3280, 5)
+    except IndexError:
+        return False
 
-#         for rect in bounding_Rects:
-#             center = rect[0]+rect[2] - rect[2]/2
-#             centers.append(center)
-
-
-#return horizontal position of the chosen cone
-try:
-    #return round(centers[0]/width,5)
-    return round(centers[0]/3280,5)
-except IndexError:
-    return False
