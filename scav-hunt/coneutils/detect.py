@@ -147,19 +147,26 @@ def findcone_mod(color, cones):
                 
     for cone in [cones]:
         print(cone)
-        if cone[1][0] == color:
-            rect= cone[0][0][0]
-            bounding_Rects.append(rect)
+        for index,cone_color in enumerate(cone[1][0]):
+            if cone_color == color:
+                #print(cone_color)
+                rect= cone[0][0][index]
+                #print('This is the rect:', rect)
+                bounding_Rects.append(rect)
+                #print('This is the bound_rect:', bounding_Rects)
+            #boundingRect returns (topleft_x,topleft_y,width,height)
 
-    #horizontal centers
+
+    #horizontal centers.  The format for the bounding position is (ymin,xmin,ymax,xmax)
     centers = []
     for rect in bounding_Rects:
-        center = rect[0]+rect[2]-rect[2]/2
+        center = rect[1]+(rect[3]-rect[1])/2
+        print(center)
+        #center = rect[0]+rect[2]-rect[2]/2
         centers.append(center)
     #return horizontal position of (first) found cone
     try:
-        #return round(centers[0]/width,5)
-        return round(centers[0]/3280, 5)
+        return round(centers[0], 5)
     except IndexError:
         return False
 

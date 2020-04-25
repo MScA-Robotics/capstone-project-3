@@ -1,0 +1,6 @@
+cone_blu
+cone_grn
+cone_org
+cone_prp
+cone_red
+cone_ylw
