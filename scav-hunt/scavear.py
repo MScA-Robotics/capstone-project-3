@@ -15,10 +15,11 @@ import pyaudio
 from scipy.io.wavfile import write
 from scipy.io import wavfile
 import scipy.signal
+from pathlib import Path
 
 import soundfile as sf
 import sounddevice as sd
-from UrbanHMM import *
+from audio_classifier import TfliteSoundClassifier
 
 
 class Scavear:
@@ -26,10 +27,8 @@ class Scavear:
     def __init__(self, model_dir, model_name, audio_output_path='data/audio', log_dir='logs'):
         self.listener = Listener(audio_path=audio_output_path)
         # Audio Model
-        self.model_dir = model_dir
-        self.model_name = model_name
-        with open(os.path.join(model_dir, model_name), 'rb') as model_file:
-            self.model = pickle.load(model_file)
+        self.model_dir = Path(model_dir)
+        self.model = TfliteSoundClassifier(self.model_dir/'model.tflite', self.model_dir/'labels.txt')
         # Log File
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
@@ -295,5 +294,5 @@ class Listener:
 
 
 if __name__ == '__main__':
-    ear = Scavear(model_dir='models/audio', model_name='hmm_cvbest_f1_56437703.pkl')
+    ear = Scavear(model_dir='models/audio')
     ear.listen_record_classify_log()
