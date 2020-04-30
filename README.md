@@ -7,13 +7,13 @@ MScA Robotics Capstone for Group 3 staring Fall 2019
 ## Prerequisites
 
 This setup requires a Raspberry Pi3 or Pi4 with the OS Raspberrian for 
-Robots by DexterOS installed. It also requires Python3 and OpenCV. 
+Robots by DexterOS installed. It also requires Python3, OpenCV, and `tf.lite.Interpreter` (via `tflite_runtime`). 
 
 Instructions for Installing:
   - [Raspberrian for Robots](https://www.dexterindustries.com/howto/install-raspbian-for-robots-image-on-an-sd-card/)
   - OpenCV ([Pi3](https://pimylifeup.com/raspberry-pi-opencv/), [Pi4](https://www.pyimagesearch.com/2019/09/16/install-opencv-4-on-raspberry-pi-4-and-raspbian-buster/))
   - [Python3](https://medium.com/@isma3il/install-python-3-6-or-3-7-and-pip-on-raspberry-pi-85e657aadb1e) (needs to be 3.6 or greater)
-
+  - [`tf.lite.interpreter`](https://www.tensorflow.org/lite/guide/python#run_an_inference_using_tflite_runtime) (Needs to be the Linux ARM version that corresponds to your Pi's processor architecture and Python version)
 
 Next, for the audio portion there are additional needs: the low-level virual machine and pyaudio. Both are 
 better installed through apt-get then they are through pip.
