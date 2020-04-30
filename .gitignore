@@ -113,13 +113,22 @@ venv.bak/
 
 # Audio files
 *.wav
+!dog.wav
 
 # Images
 *.jpg
+*.png
 
 # Model directories
 *_model
-
+variables/
+models/ensemble
+# Model files
+*.h5
+*.pb
+*.tflite
+!ensemble/main_model_e50/model.tflite
+!ensemble/main_model_e50/labels.txt
 # Boundaries files
 *.json
 
