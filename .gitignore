@@ -113,7 +113,8 @@ venv.bak/
 
 # Audio files
 *.wav
-!dog.wav
+# For testing
+!dog.wav 
 
 # Images
 *.jpg
@@ -128,8 +129,8 @@ models/ensemble
 *.pb
 *.tflite
 labels.txt
-!/audio/nn/models/ensemble/main_model_e50/model.tflite
-!/audio/nn/models/ensemble/main_model_e50/labels.txt
+##!/audio/nn/models/ensemble/main_model_e50/model.tflite
+##!/audio/nn/models/ensemble/main_model_e50/labels.txt
 # Boundaries files
 *.json
 
