@@ -12,7 +12,7 @@ python_speech_features
 pillow
 librosa
 mathplotlib
-# TODO: add tflite_runtime
+# requires manual install of tflite_runtime
 
 # OLD
 #hmmlearn
