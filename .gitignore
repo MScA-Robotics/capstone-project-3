@@ -127,8 +127,9 @@ models/ensemble
 *.h5
 *.pb
 *.tflite
-!ensemble/main_model_e50/model.tflite
-!ensemble/main_model_e50/labels.txt
+labels.txt
+!/audio/nn/models/ensemble/main_model_e50/model.tflite
+!/audio/nn/models/ensemble/main_model_e50/labels.txt
 # Boundaries files
 *.json
 
