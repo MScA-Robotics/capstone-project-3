@@ -44,8 +44,11 @@ a noise directory. Within models create an audio and visual directory.
 ## Models 
 
 There are two models needed for the scavenger hunt. An audio model
-and a visual model. The audio model needs to be a pickle file or the 
-UrbanAudio class. The visual model is a tensorflow-lite model and 
+and a visual model. The audio model needs to be a tflite model with 
+`model.tflite` file and `labels.txt` in the `./models/audio` directory. 
+More information and UChicago download links can be found in the
+[folder's README](scav-hunt/models/audio/README.md) 
+The visual model is a tensorflow-lite model and 
 needs to be a .tflite file with an associated labelmap.txt in the 
 same directory. Download both and put them in the associtated 
 directory structure.
@@ -56,7 +59,9 @@ masking for the audio file.
     scav-hunt/
     |-- models/
     |   |-- audio/
-    |   |   |-- audio_model_file.pkl
+    |   |   |-- model.tflite
+    |   |   |-- labels.txt
+    |   |   |-- README.md
     |   |-- visual/
     |   |   |-- visual_model/
     |   |   |   |-- model.tflite
