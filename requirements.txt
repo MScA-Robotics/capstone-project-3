@@ -9,4 +9,11 @@ picamera
 soundfile
 sounddevice
 python_speech_features
-hmmlearn
+pillow
+librosa
+mathplotlib
+# requires manual install of tflite_runtime
+
+# OLD
+#hmmlearn
+
