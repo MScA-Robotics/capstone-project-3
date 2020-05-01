@@ -4,14 +4,15 @@ from datetime import datetime, date
 
 from easygopigo3 import EasyGoPiGo3
 import picamera
+import glob
 
-from scaveye import ObjectClassificationModel, take_picture, record_video
+from scaveye import ObjectClassificationModel, ConeClassificationModel,take_picture, record_video
 from coneutils import detect
 
 class ScavBot:
-    def __init__(self, image_model_dir, image_dir, params, boundaries, log_dir='logs'):
+    def __init__(self, image_model_dir, cone_model_dir, image_dir, cone_image_dir,params, boundaries, log_dir='logs'):
         self.gpg = EasyGoPiGo3()
-        self.dist_sensor = self.gpg.init_distance_sensor()
+        self.dist_sensor = self.gpg.init_distance_sensor(port="AD1")
         self.servo = self.gpg.init_servo("SERVO1")
         self.servo.rotate_servo(100)
         
@@ -23,6 +24,14 @@ class ScavBot:
         self.image_model = ObjectClassificationModel( 
             model_dir = image_model_dir,
             image_dir = image_dir)
+        
+        # Cone Detection Model
+        self.cone_detection_model = ConeClassificationModel( 
+            model_dir = cone_model_dir,
+            image_dir = cone_image_dir,
+            graph_name='cone_detect.tflite',
+            min_conf_threshold=0.3, 
+            use_TPU=True)
 
         # Log File
         if not os.path.exists(log_dir):
@@ -58,9 +67,60 @@ class ScavBot:
                 centered = True
         print('Found {} cone!'.format(color))
         return True
+    
+    def find_cone_new(self, color,cones):
+        #bounds = self.boundaries[color]
+        return detect.findcone_mod(color,cones)
+
+    def center_cone_with_tfmodel(self, color):
+        print('Finding {} cone'.format(color))
+        color_dict = {'blue':0,
+                      'green':1,
+                      'orange':2,
+                      'purple':3,
+                      'red':4,
+                      'yellow':5}
+        conecolor_index = color_dict[color]
+        centered = False
+        current_degree = 0 
+        cone_image_path = '/home/pi/Pictures/Cones/'+color+'/'
+        backup_image_path = '/home/pi/Pictures/Cones/backup/'+color+'/'
+        while not centered:
+            time.sleep(.5)
+            #cone_x = self.find_cone(color)
+            take_picture(cone_image_path)
+            cones = self.cone_detection_model.classify(cone_image_path)
+            # if cone_x is False:
+            #     if current_degree > 360:
+            #         return false
+            #     self.gpg.turn_degrees(-20)
+            #     current_degree += -20
+            print(cones)
+
+            cone_x = self.find_cone_new(conecolor_index,cones)
+            print('Cone is at : ',cone_x)
+            if cone_x is False:
+                if current_degree > 360:
+                    return false
+                self.gpg.turn_degrees(-20)
+                current_degree += -20
+            if cone_x > .8:
+                self.gpg.turn_degrees(10)
+            elif cone_x < .2:
+                self.gpg.turn_degrees(-10)
+            else:
+                centered = True
+            files = glob.glob(cone_image_path+'*')
+            filename = os.path.basename(files[0])
+
+            print('destination:{}'.format(backup_image_path+filename))
+            os.rename(files[0], backup_image_path+filename)
+            #os.remove(files[0])
+        print('Found {} cone!'.format(color))
+        return True
         
     def drive_to_cone(self, color):
-        self.center_cone(color)
+        self.center_cone_with_tfmodel(color)
         print('Driving to {} cone'.format(color))
         # Drive to cone at full bore
         self.gpg.set_speed(self.params['h_spd'])
@@ -69,11 +129,13 @@ class ScavBot:
         while ob_dist >= self.params['cone_dist']:
             self.gpg.forward()
             ob_dist = self.dist_sensor.read_mm()
+            print('Distance to cone:',ob_dist)
             # Every three seconds, recenter the cone
-            if time.time() - t0 > 3:
+            if time.time() - t0 > 2:
+                self.gpg.set_speed(self.params['m_spd'])
                 self.gpg.stop()
                 print('Recentering')
-                self.center_cone(color)
+                self.center_cone_with_tfmodel(color)
                 t0 = time.time()
         self.gpg.stop()
         print("Distance Sensor Reading: {} mm ".format(ob_dist))
@@ -94,7 +156,7 @@ class ScavBot:
         # Circumscibe a circle around the cone
         # rotate gpg 90 degrees to prep for the orbit
         self.gpg.turn_degrees(-90)
-        self.servo.rotate_servo(30)
+        self.servo.rotate_servo(50)
 
         # Complete the orbit
         radius = 2*self.params['radius']/10

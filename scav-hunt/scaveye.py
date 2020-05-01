@@ -313,6 +313,46 @@ class ConeClassificationModel:
             classes_list.append(classes[scores > self.min_conf_threshold])
             scores_list.append(scores[scores > self.min_conf_threshold])
 
+
+            # Get bounding box coordinates and draw box
+            # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
+            objects_dict ={}
+            print(scores)
+            print(classes_list)
+            for i in range(len(scores)):
+                if ((scores[i] > self.min_conf_threshold) and (scores[i] <= 1.0)):
+
+                    ymin = int(max(1,(boxes[i][0] * imH)))
+                    xmin = int(max(1,(boxes[i][1] * imW)))
+                    ymax = int(min(imH,(boxes[i][2] * imH)))
+                    xmax = int(min(imW,(boxes[i][3] * imW)))
+                    print((xmin,ymin), (xmax,ymax),(imH,imW))
+                    cv2.rectangle(image, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
+                    print(i)
+                    print(classes_list)
+                    print(self.labels)
+                    # for j in classes_list[0]:
+                    #     print('j',j)
+                    #     label = self.labels[int(j)]
+                    # objects_dict[label] = [(xmin,ymin), (xmax,ymax),(imH,imW)]
+
+
+                    # Draw label
+                    object_name = self.labels[int(classes[i])] # Look up object name from "labels" array using class index
+                    objects_dict[object_name] = [(xmin,ymin), (xmax,ymax),(imH,imW)]
+                    label = '%s: %d%%' % (object_name, int(scores[i]*100)) # Example: 'person: 72%'
+                    labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2) # Get font size
+                    label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
+                    cv2.rectangle(image, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
+                    cv2.putText(image, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2) # Draw label text
+            # cv2.namedWindow('Object detector',cv2.WINDOW_NORMAL)
+            # cv2.resizeWindow('Object detector', 1000,1000)
+            # cv2.imshow('Object detector', image)
+
+            # # Press any key to continue to next image, or press 'q' to quit
+            # if cv2.waitKey(0) == ord('q'):
+            #     break
+
         objects_detected = {}
         for classes in classes_list:
             objects = set([self.labels[int(c)] for c in classes])
@@ -321,9 +361,10 @@ class ConeClassificationModel:
                     objects_detected[obj] += 1
                 else:
                     objects_detected[obj] = 1
-
-        return boxes_list,classes_list, scores_list, objects_detected
-
+        
+        print(objects_dict)
+        return boxes_list, classes_list, scores_list, objects_detected,objects_dict
+        #return objects_dict
 
 
 if __name__ == '__main__':
