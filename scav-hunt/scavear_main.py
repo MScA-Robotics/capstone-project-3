@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[15]:
+
+
 import os
 import sys
 import struct
 import math
 import pickle
-
+import audioop as ao
 import numpy as np
 import time
 from datetime import datetime, date
@@ -15,16 +21,23 @@ import pyaudio
 from scipy.io.wavfile import write
 from scipy.io import wavfile
 import scipy.signal
+from array import *
 
 import soundfile as sf
 import sounddevice as sd
 from UrbanHMM import *
-import audioop as ao
+from UrbanHMM import UrbanHMMClassifier
+#from UrbanAudio import *
+#from UrbanAudio import UrbanHMMClassifier
+
+
+# In[37]:
+
 
 class Scavear:
-
-    def __init__(self, model_dir, model_name, audio_output_path='data/audio', log_dir='logs'):
-        self.listener = Listener(audio_path=audio_output_path)
+    
+    def __init__(self, model_dir, model_name, audio_path, log_dir='logs'):
+        self.listener = Listener(audio_path=audio_path)
         # Audio Model
         self.model_dir = model_dir
         self.model_name = model_name
@@ -35,13 +48,14 @@ class Scavear:
             os.makedirs(log_dir)
         self.log_path = os.path.join(log_dir, 'log_'+str(date.today())+'.txt')
 
-    def listen_record_classify_log(self, seconds=15):
+    def listen_record_classify_log(self, seconds=150):
         start = time.time()
         while time.time() - start < seconds:
-            self.listener.listen()
-            audio_clip_path = self.listener.record(2)
-            audio_class = self.classify(audio_clip_path)
-            txt = ','.join([str(datetime.now()), str(audio_class)])
+            audio_clip_path, logtime = self.listener.listen_trigger_record(2, print_rms = True)
+            #audio_clip_path = self.listener.record(2)
+            filtered_audio_clip_path = self.listener.remove_noise(audio_clip_path)
+            audio_class = self.classify(filtered_audio_clip_path)
+            txt = ','.join([str(logtime), str(audio_class)])
             self.log(txt)
             print('Logged: ', txt)
 
@@ -52,6 +66,9 @@ class Scavear:
         with open(self.log_path, 'a') as f:
             f.write(txt)
             f.write('\n')
+
+
+# In[34]:
 
 
 class Listener:
@@ -108,7 +125,7 @@ class Listener:
 
     def remove_noise(
         self,
-        audio_clip,
+        audio_clip_path,
         n_grad_freq=2,
         n_grad_time=4,
         n_fft=2048,
@@ -116,6 +133,9 @@ class Listener:
         hop_length=512,
         n_std_thresh=1.5,
         prop_decrease=1.0):
+        
+        rate, data = wavfile.read(audio_clip_path)
+        audio_clip = data.astype(float)
         """Remove noise from audio based upon a clip containing only noise
         Args:
             audio_clip (array): The first parameter.
@@ -134,8 +154,8 @@ class Listener:
         noise_thresh = self.noise_thresh
         mean_freq_noise = self.mean_freq_noise
         std_freq_noise = self.std_freq_noise
-        noise_stft_db = self.noise_stft_db
-
+        noise_stft_db = self.noise_stft_db        
+        
         # STFT over signal
         sig_stft = self._stft(audio_clip, n_fft, hop_length, win_length)
         sig_stft_db = self._amp_to_db(np.abs(sig_stft))
@@ -183,7 +203,15 @@ class Listener:
         recovered_spec = self._amp_to_db(
             np.abs(self._stft(recovered_signal, n_fft, hop_length, win_length))
         )
-        return recovered_signal
+        
+        newname = audio_clip_path.replace('.wav','')
+        filtered_audio_clip_path = newname + '_filtered.wav'
+        
+        print(filtered_audio_clip_path)
+        librosa.output.write_wav(filtered_audio_clip_path, recovered_signal, rate)
+        #wavfile.write(filtered_audio_clip_path, rate, recovered_signal)
+        
+        return filtered_audio_clip_path
 
     def rms(self, frame, bytestream):
         count = len(frame)/self.swidth
@@ -228,26 +256,72 @@ class Listener:
         self.stream.close()
         self.p.terminate()
 
-    def listen(self, with_filter = False, print_rms=True):
+    def listen(self, with_filter = False, print_rms=False):
         self.open_stream()
         print("listening now...")
         silence = True
         while silence:
-            try:
-                input = self.stream.read(self.CHUNK)
-            except:
-                continue
+            #try:
+            #    input = self.stream.read(self.CHUNK)
+            #except:
+            #    continue
+            
+            input = self.stream.read(self.CHUNK)
+            #data = int.from_bytes(input, byteorder='big', signed=True)
             if (with_filter):
-                filtered = self.filter_stream(input)
+                filtered = self.filter_stream(data)
                 filtered_tuple = tuple(filtered)
                 rms_value = self.rms(filtered_tuple, bytestream = False)
             else:
-                rms_value = ao.rms(input,2)
+                #rms_value = self.rms(data, bytestream = False)
+                rms_value = ao.rms(input,1)
                 if print_rms:
                     print(rms_value)
+                    
             if (rms_value > self.THRESHOLD):
                 silence = False
 
+    def listen_trigger_record(self, seconds, print_rms = False ):
+        RECORD_SECONDS = seconds
+        CHUNK = self.CHUNK
+        CHANNELS = self.CHANNELS
+        RATE = self.RATE
+        FORMAT = self.FORMAT
+
+        self.open_stream()
+        print('listening...')
+        frames = []
+        rms_values = np.empty(1,dtype=float)
+        while (True):
+            trigger = self.stream.read(CHUNK)
+            rms_value = int(ao.rms(trigger,2))
+            rms_values = np.append(rms_values,rms_value)
+            if(print_rms == True):
+                print(rms_value)
+            if (rms_value > self.THRESHOLD):
+                frames.append(trigger)
+                logtime = str(datetime.now())
+                for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+                    data = self.stream.read(CHUNK)
+                    frames.append(data)
+
+                if not os.path.exists(self.audio_path):
+                    os.makedirs(self.audio_path)
+
+                filename = self.audio_path + '/' +                            'recording_' +                            format(datetime.now().strftime('%m%d%Y%H%M%S')) +                            '.wav'
+                wf = wave.open(filename, 'wb')
+                wf.setnchannels(CHANNELS)
+                wf.setsampwidth(self.p.get_sample_size(FORMAT))
+                wf.setframerate(RATE)
+                wf.writeframes(b''.join(frames))
+                wf.close()
+                self.close_stream()
+                rms_filename = 'rms.txt' #+ \
+                           #format(datetime.now().strftime('%m%d%Y%H%M%S')) + \
+                           #'.txt'
+                np.savetxt(rms_filename, rms_values, delimiter = ',')
+                return filename, logtime
+                
     def record(self, seconds):
         RECORD_SECONDS = seconds
         CHUNK = self.CHUNK
@@ -260,30 +334,27 @@ class Listener:
         for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
             data = self.stream.read(CHUNK)
             #convert bytestream to 16bit PCM
-            sig = np.frombuffer(data, dtype='<i2').reshape(-1, CHANNELS)
+            #sig = np.frombuffer(data, dtype='<i2').reshape(-1, CHANNELS)
             # Change shape and type for noise removal function
-            sig = sig.T[0].astype('float')
+            #sig = sig.T[0].astype('float')
             #GoPiGo noise removal
-            output = self.remove_noise(
-                audio_clip=sig,
-                n_std_thresh=2,
-                prop_decrease=0.95)
+            #output = self.remove_noise(
+            #    audio_clip=sig,
+            #    n_std_thresh=2,
+            #    prop_decrease=0.95)
             #prep for rms calcualtion
-            filtered_output = tuple(output)
+            #filtered_output = tuple(output)
             #RMS calculation
-            rms1 = self.rms(filtered_output, bytestream=False)
+            #rms1 = self.rms(filtered_output, bytestream=False)
             # convert filtered numpy array back to a bytestream for saving..
-            new_sig = np.array([output.astype('int')],dtype='<u2').T
-            data = new_sig.tobytes()
+            #new_sig = np.array([output.astype('int')],dtype='<u2').T
+            #data = new_sig.tobytes()
             frames.append(data)
 
         if not os.path.exists(self.audio_path):
             os.makedirs(self.audio_path)
 
-        filename = self.audio_path + '/' + \
-                   'recording_' + \
-                   format(datetime.now().strftime('%m%d%Y%H%M%S')) + \
-                   '.wav'
+        filename = self.audio_path + '/' +                    'recording_' +                    format(datetime.now().strftime('%m%d%Y%H%M%S')) +                    '.wav'
         wf = wave.open(filename, 'wb')
         wf.setnchannels(CHANNELS)
         wf.setsampwidth(self.p.get_sample_size(FORMAT))
@@ -294,6 +365,27 @@ class Listener:
         return filename
 
 
+# In[35]:
+
+
 if __name__ == '__main__':
-    ear = Scavear(model_dir='models/audio', model_name='hmm_cvbest_f1_56437703.pkl')
+    from datetime import date
+
+    today = str(date.today())
+
+    ear = Scavear(
+        model_dir='models/audio',
+        model_name='hmm_cvbest_f1_56437703.pkl',
+        audio_path='data/audio/{}'.format(today)
+    )
     ear.listen_record_classify_log()
+
+
+# In[36]:
+
+
+#import matplotlib.pyplot as plt
+
+#rms_value = np.loadtxt(fname = "rms.txt", dtype=int)
+#plt.plot(rms_value)
+
