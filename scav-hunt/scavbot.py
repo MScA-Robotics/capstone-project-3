@@ -23,7 +23,9 @@ class ScavBot:
         # Image Model
         self.image_model = ObjectClassificationModel( 
             model_dir = image_model_dir,
-            image_dir = image_dir)
+            image_dir = image_dir,
+            min_conf_threshold=0.3,
+            use_TPU=True)
         
         # Cone Detection Model
         self.cone_detection_model = ConeClassificationModel( 
@@ -104,9 +106,9 @@ class ScavBot:
                     return false
                 self.gpg.turn_degrees(-20)
                 current_degree += -20
-            if cone_x > .8:
+            if cone_x > .6:
                 self.gpg.turn_degrees(10)
-            elif cone_x < .2:
+            elif cone_x <.4:
                 self.gpg.turn_degrees(-10)
             else:
                 centered = True
@@ -156,33 +158,47 @@ class ScavBot:
         # Circumscibe a circle around the cone
         # rotate gpg 90 degrees to prep for the orbit
         self.gpg.turn_degrees(-90)
-        self.servo.rotate_servo(50)
-
-        # Complete the orbit
-        radius = 2*self.params['radius']/10
-        self.orbit_and_take_picture(40, radius, color)
-        self.orbit_and_take_picture(100, radius, color, turn_90=True)
-        self.orbit_and_take_picture(110, radius, color)
-        self.orbit_and_take_picture(40, radius, color)
         
-        self.servo.rotate_servo(100)
+        radius = 2*self.params['radius']/10
+        if color == 'red':
+            red_radius = 50
+            print('orbiting red cone at {}'.format(red_radius))
+            self.gpg.orbit(300, red_radius)
+        else:
+            # Complete the orbit
+            #self.servo.rotate_servo(50)
+            
+            #self.orbit_and_take_picture(40, radius, color)
+            self.orbit_and_take_picture(140, radius, color, turn_90=True)
+            self.orbit_and_take_picture(100, radius, color)
+            #self.orbit_and_take_picture(40, radius, color)
+        
+        #self.servo.rotate_servo(90)
 
     def orbit_and_take_picture(self, degrees, radius, color, turn_90=False):
         self.gpg.orbit(degrees, radius)
         picture_path = os.path.join(self.image_dir, color)
+        video_path = os.path.join('/home/pi/Videos/',color)
         if not os.path.exists(picture_path):
             os.makedirs(picture_path)
 
+        if not os.path.exists(video_path):
+            os.makedirs(video_path)
+
         if turn_90:
-            self.servo.rotate_servo(100)
+            #self.servo.rotate_servo(100)
             self.gpg.turn_degrees(90)
-            self.gpg.drive_cm(-20)
-            take_picture(picture_path)
+            self.gpg.drive_cm(-10)
+            #take_picture(picture_path)
+            record_video(video_path,duration=2)
+            object = self.image_model.classify_video(video_path)
+            print(object)
             self.gpg.drive_cm(20)
             self.gpg.turn_degrees(-90)
-            self.servo.rotate_servo(30)
+            #self.servo.rotate_servo(30)
         else:
-            take_picture(picture_path)
+            #take_picture(picture_path)
+            pass
 
     def classify_and_log(self, color):
         image_dir = os.path.join(self.image_model.image_dir, color)

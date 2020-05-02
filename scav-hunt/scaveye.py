@@ -159,7 +159,7 @@ class ObjectClassificationModel:
         #4. For each video file
         for video_file in videos:
             video_name=os.path.basename(video_file)
-            print('Processing video: {}'.format(video_name))
+            #print('Processing video: {}'.format(video_name))
             #4.1 Open the video file 
             video = cv2.VideoCapture(video_file)
             imW = video.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -167,10 +167,11 @@ class ObjectClassificationModel:
             collect_labels = []
             #4.1.1 pass frame by frame to the  detection model
             index = 0
+            print('Min Threshold',self.min_conf_threshold)
             while(video.isOpened()):
                 # Acquire frame and resize to expected shape [1xHxWx3]
                 ret, frame = video.read()
-                #print('Processing frame: {}'.format(index+1))
+                print('Processing frame: {}'.format(index+1))
                 if frame is None:
                     break
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -205,12 +206,14 @@ class ObjectClassificationModel:
                         # Draw label
                         object_name = self.labels[int(classes[i])] # Look up object name from "labels" array using class index
                         label = '%s: %d%%' % (object_name, int(scores[i]*100)) # Example: 'person: 72%'
-                        #labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2) # Get font size
-                        #label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
-                        #cv2.rectangle(frame, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
-                        #cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
+                        labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2) # Get font size
+                        label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
+                        cv2.rectangle(frame, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
+                        cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
                         collect_labels.append(object_name)
                 index += 1
+                # All the results have been drawn on the frame, so it's time to display it.
+                cv2.imshow('Object detector', frame)
             video.release()
             #cv2.destroyAllWindows()
             most_common,num_most_common = Counter(collect_labels).most_common(1)[0]
