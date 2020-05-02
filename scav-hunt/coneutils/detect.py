@@ -146,7 +146,7 @@ def findcone_mod(color, cones):
     #print(color)
                 
     for cone in [cones]:
-        print(cone)
+        #print(cone)
         for index,cone_color in enumerate(cone[1][0]):
             if cone_color == color:
                 #print(cone_color)

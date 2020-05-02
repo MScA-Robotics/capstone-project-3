@@ -159,7 +159,7 @@ class ObjectClassificationModel:
         #4. For each video file
         for video_file in videos:
             video_name=os.path.basename(video_file)
-            #print('Processing video: {}'.format(video_name))
+            print('Processing video: {}'.format(video_name))
             #4.1 Open the video file 
             video = cv2.VideoCapture(video_file)
             imW = video.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -171,7 +171,7 @@ class ObjectClassificationModel:
             while(video.isOpened()):
                 # Acquire frame and resize to expected shape [1xHxWx3]
                 ret, frame = video.read()
-                print('Processing frame: {}'.format(index+1))
+                #print('Processing frame: {}'.format(index+1))
                 if frame is None:
                     break
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -216,8 +216,11 @@ class ObjectClassificationModel:
                 cv2.imshow('Object detector', frame)
             video.release()
             #cv2.destroyAllWindows()
-            most_common,num_most_common = Counter(collect_labels).most_common(1)[0]
-            max_object = most_common
+            if len(collect_labels)>0:
+                most_common,num_most_common = Counter(collect_labels).most_common(1)[0]
+                max_object = most_common
+            else:
+                max_object = 'Nothing'
             print('Maximum detected object :{}'.format(max_object))
             print(Counter(collect_labels))
         return max_object
@@ -320,8 +323,8 @@ class ConeClassificationModel:
             # Get bounding box coordinates and draw box
             # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
             objects_dict ={}
-            print(scores)
-            print(classes_list)
+            #print(scores)
+            #print(classes_list)
             for i in range(len(scores)):
                 if ((scores[i] > self.min_conf_threshold) and (scores[i] <= 1.0)):
 
@@ -331,9 +334,9 @@ class ConeClassificationModel:
                     xmax = int(min(imW,(boxes[i][3] * imW)))
                     print((xmin,ymin), (xmax,ymax),(imH,imW))
                     cv2.rectangle(image, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
-                    print(i)
-                    print(classes_list)
-                    print(self.labels)
+                    #print(i)
+                    #print(classes_list)
+                    #print(self.labels)
                     # for j in classes_list[0]:
                     #     print('j',j)
                     #     label = self.labels[int(j)]
@@ -365,7 +368,7 @@ class ConeClassificationModel:
                 else:
                     objects_detected[obj] = 1
         
-        print(objects_dict)
+        #print(objects_dict)
         return boxes_list, classes_list, scores_list, objects_detected,objects_dict
         #return objects_dict
 

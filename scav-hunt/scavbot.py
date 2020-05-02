@@ -97,7 +97,7 @@ class ScavBot:
             #         return false
             #     self.gpg.turn_degrees(-20)
             #     current_degree += -20
-            print(cones)
+            #print(cones)
 
             cone_x = self.find_cone_new(conecolor_index,cones)
             print('Cone is at : ',cone_x)
@@ -106,9 +106,9 @@ class ScavBot:
                     return false
                 self.gpg.turn_degrees(-20)
                 current_degree += -20
-            if cone_x > .6:
+            if cone_x > .65:
                 self.gpg.turn_degrees(10)
-            elif cone_x <.4:
+            elif cone_x <.35:
                 self.gpg.turn_degrees(-10)
             else:
                 centered = True
@@ -128,12 +128,12 @@ class ScavBot:
         self.gpg.set_speed(self.params['h_spd'])
         ob_dist = self.dist_sensor.read_mm()
         t0 = time.time()
-        while ob_dist >= self.params['cone_dist']:
+        while ob_dist >= self.params['cone_dist'] or ob_dist ==0:#sometimes distance sensor gives 0mm reading erroneously
             self.gpg.forward()
             ob_dist = self.dist_sensor.read_mm()
             print('Distance to cone:',ob_dist)
             # Every three seconds, recenter the cone
-            if time.time() - t0 > 2:
+            if time.time() - t0 > 3:
                 self.gpg.set_speed(self.params['m_spd'])
                 self.gpg.stop()
                 print('Recentering')
@@ -153,32 +153,55 @@ class ScavBot:
     def circum_navigate(self, color):
         # Set the speed to medium speed
         self.gpg.set_speed(self.params['m_spd'])
-        print("I will now cicle the cone at {} mm ".format(self.params['radius']))
+        #print("I will now cicle the cone at {} mm ".format(self.params['radius']))
 
         # Circumscibe a circle around the cone
         # rotate gpg 90 degrees to prep for the orbit
         self.gpg.turn_degrees(-90)
         
-        radius = 2*self.params['radius']/10
+        #radius = 2*self.params['radius']/10
+
         if color == 'red':
-            red_radius = 50
-            print('orbiting red cone at {}'.format(red_radius))
-            self.gpg.orbit(300, red_radius)
-        else:
+            radius = 40
+            print('orbiting red cone at {}'.format(radius))
+            print("I will now cicle the cone at {} mm ".format(radius))
+            self.gpg.set_speed(self.params['h_spd']) #high speed for red cone
+            self.gpg.orbit(300, radius)
+        elif color == 'green':
+            radius = 50 
+            print("I will now cicle the cone at {} mm ".format(radius))
+            self.orbit_and_take_picture(150, radius, color, turn_90=True)
+            self.orbit_and_take_picture(100, radius, color)
+        elif color == 'yellow':
+            radius = 60
+            print("I will now cicle the cone at {} mm ".format(radius))
+            self.orbit_and_take_picture(150, radius, color, turn_90=True)
+            self.orbit_and_take_picture(100, radius, color)
+        elif color =='purple':
+            radius = 70
+            print("I will now cicle the cone at {} mm ".format(radius))
+            self.orbit_and_take_picture(150, radius, color, turn_90=True)
+            self.orbit_and_take_picture(100, radius, color)
             # Complete the orbit
             #self.servo.rotate_servo(50)
-            
-            #self.orbit_and_take_picture(40, radius, color)
-            self.orbit_and_take_picture(140, radius, color, turn_90=True)
-            self.orbit_and_take_picture(100, radius, color)
-            #self.orbit_and_take_picture(40, radius, color)
+            # if color=='purple':
+            #     #bigger radius because of large object
+            #     radius = 70
+            # else:
+            #     radius = 50
+
+            # #self.orbit_and_take_picture(40, radius, color)
+            # self.orbit_and_take_picture(150, radius, color, turn_90=True)
+            # self.orbit_and_take_picture(100, radius, color)
+            # #self.orbit_and_take_picture(40, radius, color)
+        
         
         #self.servo.rotate_servo(90)
 
     def orbit_and_take_picture(self, degrees, radius, color, turn_90=False):
         self.gpg.orbit(degrees, radius)
         picture_path = os.path.join(self.image_dir, color)
-        video_path = os.path.join('/home/pi/Videos/',color)
+        video_path = '/home/pi/Videos/'
         if not os.path.exists(picture_path):
             os.makedirs(picture_path)
 
@@ -188,12 +211,13 @@ class ScavBot:
         if turn_90:
             #self.servo.rotate_servo(100)
             self.gpg.turn_degrees(90)
-            self.gpg.drive_cm(-10)
+            drive_cm = 10
+            self.gpg.drive_cm(-drive_cm)
             #take_picture(picture_path)
-            record_video(video_path,duration=2)
-            object = self.image_model.classify_video(video_path)
-            print(object)
-            self.gpg.drive_cm(20)
+            record_video(video_path,cone_color=color,duration=3)
+            cone_object = self.image_model.classify_video(video_path+color)
+            print('!!!!!!!!!!!!Behind {} cone I found {}'.format(color,cone_object))
+            self.gpg.drive_cm(drive_cm)
             self.gpg.turn_degrees(-90)
             #self.servo.rotate_servo(30)
         else:
