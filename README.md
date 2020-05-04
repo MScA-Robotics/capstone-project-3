@@ -16,6 +16,8 @@ Instructions for Installing:
   - [`tf.lite.interpreter`](https://www.tensorflow.org/lite/guide/python#run_an_inference_using_tflite_runtime) (Needs to be the Linux ARM version that corresponds to your Pi's processor architecture and Python version)
   
   NOTE: Run "uname -m" to confirm. If it says aarch64 then it is 64 bit. If it says armv7l then it is 32 bit.
+  
+  - [EDGE TPU Runtime](https://coral.ai/docs/accelerator/get-started/#requirements)
 
 Next, for the audio portion there are additional needs: the low-level virual machine and pyaudio. Both are 
 better installed through apt-get then they are through pip.
