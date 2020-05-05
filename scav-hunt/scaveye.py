@@ -1,4 +1,3 @@
-#Changes by Raghav for video classification
 import os
 import glob
 import picamera
@@ -11,7 +10,7 @@ import time
 from collections import Counter
 
 # If using TPU, need to load a different library
-#from tensorflow.lite.python.interpreter import Interpreter
+# from tensorflow.lite.python.interpreter import Interpreter
 
 
 def take_picture(path):
@@ -24,7 +23,8 @@ def take_picture(path):
         print('Picture taken')
         camera.close()
 
-def record_video(path=None,cone_color='green',duration=5,runid=0):
+        
+def record_video(path=None, cone_color='green', duration=5, runid=0):
     if path is None:
         path="/home/pi/Videos"
     path = os.path.join(path,cone_color)
@@ -78,9 +78,9 @@ class ObjectClassificationModel:
             # If user has specified the name of the .tflite file, use that name, otherwise use default 'edgetpu.tflite'
             if (graph_name == 'detect.tflite'):
                 graph_name = 'edgetpu.tflite'
-        # Load the model 
+
         PATH_TO_CKPT = os.path.join(CWD_PATH, model_dir, graph_name)
-        #self.interpreter = Interpreter(model_path=PATH_TO_CKPT)
+        
         # Load the Tensorflow Lite model.
         # If using Edge TPU, use special load_delegate argument
         if self.use_TPU:
@@ -106,6 +106,7 @@ class ObjectClassificationModel:
         scores_list = []
         for image_path in images:
             print('Classifying: {}'.format(image_path))
+            
             # Load image and resize to expected shape [1xHxWx3]
             image = cv2.imread(image_path)
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -124,12 +125,10 @@ class ObjectClassificationModel:
             # Retrieve detection results
             # We are not using the boxes right now since we do not need to know 
             # where picture the object is, only that it is there.
-
             # boxes = interpreter.get_tensor(output_details[0]['index'])[0] # Bounding box coordinates of detected objects
+            
             classes = self.interpreter.get_tensor(self.output_details[1]['index'])[0] # Class index of detected objects
             scores = self.interpreter.get_tensor(self.output_details[2]['index'])[0] # Confidence of detected objects
-            # num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
-
             classes_list.append(classes[scores > self.min_conf_threshold])
             scores_list.append(scores[scores > self.min_conf_threshold])
 
@@ -165,18 +164,18 @@ class ObjectClassificationModel:
             imW = video.get(cv2.CAP_PROP_FRAME_WIDTH)
             imH = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
             collect_labels = []
-            #4.1.1 pass frame by frame to the  detection model
+            #4 .1.1 pass frame by frame to the  detection model
             index = 0
             print('Min Threshold',self.min_conf_threshold)
             while(video.isOpened()):
                 # Acquire frame and resize to expected shape [1xHxWx3]
                 ret, frame = video.read()
-                #print('Processing frame: {}'.format(index+1))
                 if frame is None:
                     break
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame_resized = cv2.resize(frame_rgb, (self.width, self.height))
                 input_data = np.expand_dims(frame_resized, axis=0)
+                
                 # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
                 if self.floating_model:
                     input_data = (np.float32(input_data) - self.input_mean) / self.input_std
@@ -307,24 +306,16 @@ class ConeClassificationModel:
             self.interpreter.set_tensor(self.input_details[0]['index'],input_data)
             self.interpreter.invoke()
 
-            # Retrieve detection results
-            # We are not using the boxes right now since we do not need to know 
-            # where picture the object is, only that it is there.
-
             boxes = self.interpreter.get_tensor(self.output_details[0]['index'])[0] # Bounding box coordinates of detected objects
             classes = self.interpreter.get_tensor(self.output_details[1]['index'])[0] # Class index of detected objects
             scores = self.interpreter.get_tensor(self.output_details[2]['index'])[0] # Confidence of detected objects
-            # num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
             boxes_list.append(boxes[scores > self.min_conf_threshold])
             classes_list.append(classes[scores > self.min_conf_threshold])
             scores_list.append(scores[scores > self.min_conf_threshold])
 
-
             # Get bounding box coordinates and draw box
             # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
             objects_dict ={}
-            #print(scores)
-            #print(classes_list)
             for i in range(len(scores)):
                 if ((scores[i] > self.min_conf_threshold) and (scores[i] <= 1.0)):
 
@@ -334,14 +325,6 @@ class ConeClassificationModel:
                     xmax = int(min(imW,(boxes[i][3] * imW)))
                     print((xmin,ymin), (xmax,ymax),(imH,imW))
                     cv2.rectangle(image, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
-                    #print(i)
-                    #print(classes_list)
-                    #print(self.labels)
-                    # for j in classes_list[0]:
-                    #     print('j',j)
-                    #     label = self.labels[int(j)]
-                    # objects_dict[label] = [(xmin,ymin), (xmax,ymax),(imH,imW)]
-
 
                     # Draw label
                     object_name = self.labels[int(classes[i])] # Look up object name from "labels" array using class index
@@ -351,14 +334,8 @@ class ConeClassificationModel:
                     label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
                     cv2.rectangle(image, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
                     cv2.putText(image, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2) # Draw label text
-            # cv2.namedWindow('Object detector',cv2.WINDOW_NORMAL)
-            # cv2.resizeWindow('Object detector', 1000,1000)
-            # cv2.imshow('Object detector', image)
-
-            # # Press any key to continue to next image, or press 'q' to quit
-            # if cv2.waitKey(0) == ord('q'):
-            #     break
-
+            classes_list.append(classes[scores > self.min_conf_threshold])
+            scores_list.append(scores[scores > self.min_conf_threshold])
         objects_detected = {}
         for classes in classes_list:
             objects = set([self.labels[int(c)] for c in classes])
@@ -367,15 +344,10 @@ class ConeClassificationModel:
                     objects_detected[obj] += 1
                 else:
                     objects_detected[obj] = 1
-        
-        #print(objects_dict)
-        return boxes_list, classes_list, scores_list, objects_detected,objects_dict
-        #return objects_dict
+        return boxes_list, classes_list, scores_list, objects_detected, objects_dict
 
 
 if __name__ == '__main__':
 
     model = ObjectClassificationModel('Sample_TFLite_model', '/home/pi/Pictures/scav_hunt')
     classes, scores, objects = model.classify(os.path.join(model.image_dir, 'archive/orange'))
-
-

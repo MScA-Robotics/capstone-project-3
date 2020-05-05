@@ -90,6 +90,7 @@ celerybeat-schedule
 .venv
 env/
 venv/
+venv3/
 ENV/
 env.bak/
 venv.bak/
@@ -112,15 +113,44 @@ venv.bak/
 
 # Audio files
 *.wav
+# For testing
+!dog.wav 
 
 # Images
 *.jpg
+*.png
 
 # Model directories
 *_model
-
+variables/
+models/ensemble
+# Model files
+*.h5
+*.pb
+*.tflite
+labels.txt
+##!/audio/nn/models/ensemble/main_model_e50/model.tflite
+##!/audio/nn/models/ensemble/main_model_e50/labels.txt
 # Boundaries files
 *.json
 
 # logs
 logs/
+
+# model pickles
+*.pkl
+
+# zip
+*.zip
+
+#log files
+*.log
+
+# csv files
+*.csv
+
+# logs
+logs/
+
+# Noise files
+*.npy

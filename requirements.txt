@@ -1,6 +1,19 @@
+sklearn
+IPython
+
+# Visual
 numpy
 picamera
 
 # Audio
 soundfile
 sounddevice
+python_speech_features
+pillow
+librosa
+mathplotlib
+# requires manual install of tflite_runtime
+
+# OLD
+#hmmlearn
+

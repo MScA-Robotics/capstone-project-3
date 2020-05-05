@@ -9,19 +9,21 @@ import glob
 from scaveye import ObjectClassificationModel, ConeClassificationModel,take_picture, record_video
 from coneutils import detect
 
+
 class ScavBot:
-    def __init__(self, image_model_dir, cone_model_dir, image_dir, cone_image_dir,params, boundaries, log_dir='logs'):
+
+    def __init__(self, image_model_dir, cone_model_dir, image_dir, cone_image_dir, params, boundaries, log_dir='logs'):
         self.gpg = EasyGoPiGo3()
         self.dist_sensor = self.gpg.init_distance_sensor(port="AD1")
         self.servo = self.gpg.init_servo("SERVO1")
         self.servo.rotate_servo(100)
-        
+
         self.params = params
         self.boundaries = boundaries
         self.image_dir = image_dir
 
         # Image Model
-        self.image_model = ObjectClassificationModel( 
+        self.image_model = ObjectClassificationModel(
             model_dir = image_model_dir,
             image_dir = image_dir,
             min_conf_threshold=0.3,
@@ -44,7 +46,7 @@ class ScavBot:
         with open(self.log_path, 'a') as f:
             f.write(txt)
             f.write('\n')
-        
+
     def find_cone(self, color):
         bounds = self.boundaries[color]
         return detect.findCone(bounds)
@@ -58,7 +60,7 @@ class ScavBot:
             cone_x = self.find_cone(color)
             if cone_x is False:
                 if current_degree > 360:
-                    return false
+                    return False
                 self.gpg.turn_degrees(-20)
                 current_degree += -20
             if cone_x > .6:
@@ -71,7 +73,6 @@ class ScavBot:
         return True
     
     def find_cone_new(self, color,cones):
-        #bounds = self.boundaries[color]
         return detect.findcone_mod(color,cones)
 
     def center_cone_with_tfmodel(self, color):
@@ -158,9 +159,6 @@ class ScavBot:
         # Circumscibe a circle around the cone
         # rotate gpg 90 degrees to prep for the orbit
         self.gpg.turn_degrees(-90)
-        
-        #radius = 2*self.params['radius']/10
-
         if color == 'red':
             radius = 40
             print('orbiting red cone at {}'.format(radius))
@@ -182,25 +180,11 @@ class ScavBot:
             print("I will now cicle the cone at {} mm ".format(radius))
             self.orbit_and_take_picture(150, radius, color, turn_90=True)
             self.orbit_and_take_picture(100, radius, color)
-            # Complete the orbit
-            #self.servo.rotate_servo(50)
-            # if color=='purple':
-            #     #bigger radius because of large object
-            #     radius = 70
-            # else:
-            #     radius = 50
-
-            # #self.orbit_and_take_picture(40, radius, color)
-            # self.orbit_and_take_picture(150, radius, color, turn_90=True)
-            # self.orbit_and_take_picture(100, radius, color)
-            # #self.orbit_and_take_picture(40, radius, color)
-        
-        
-        #self.servo.rotate_servo(90)
 
     def orbit_and_take_picture(self, degrees, radius, color, turn_90=False):
         self.gpg.orbit(degrees, radius)
         picture_path = os.path.join(self.image_dir, color)
+        #TODO: make this path a default argument
         video_path = '/home/pi/Videos/'
         if not os.path.exists(picture_path):
             os.makedirs(picture_path)
@@ -209,19 +193,16 @@ class ScavBot:
             os.makedirs(video_path)
 
         if turn_90:
-            #self.servo.rotate_servo(100)
             self.gpg.turn_degrees(90)
             drive_cm = 10
             self.gpg.drive_cm(-drive_cm)
-            #take_picture(picture_path)
             record_video(video_path,cone_color=color,duration=3)
             cone_object = self.image_model.classify_video(video_path+color)
             print('!!!!!!!!!!!!Behind {} cone I found {}'.format(color,cone_object))
             self.gpg.drive_cm(drive_cm)
             self.gpg.turn_degrees(-90)
-            #self.servo.rotate_servo(30)
         else:
-            #take_picture(picture_path)
+            #TODO: What if turn_90 is false?
             pass
 
     def classify_and_log(self, color):
