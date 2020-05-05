@@ -134,6 +134,9 @@ labels.txt
 # Boundaries files
 *.json
 
+# logs
+logs/
+
 # model pickles
 *.pkl
 
