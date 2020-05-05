@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-
-
-
-
 import os
 import sys
 import struct
@@ -89,19 +84,16 @@ def perform_scavear():
             f.write(txt)
             f.write('\n')
             
-    @staticmethod
+    
     def _stft(y, n_fft, hop_length, win_length):
         return librosa.stft(y=y, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
 
-    @staticmethod
     def _istft(y, hop_length, win_length):
         return librosa.istft(y, hop_length, win_length)
 
-    @staticmethod
     def _amp_to_db(x):
         return librosa.core.amplitude_to_db(x, ref=1.0, amin=1e-20, top_db=80.0)
 
-    @staticmethod
     def _db_to_amp(x,):
         return librosa.core.db_to_amplitude(x, ref=1.0)
 
@@ -254,8 +246,7 @@ def perform_scavear():
     
     start = time.time()
     while time.time() - start < runtime:
-        audio_clip_path, logtime = listen_trigger_record(2, print_rms = True)
-            #audio_clip_path = self.listener.record(2)
+        audio_clip_path, logtime = listen_trigger_record(4, print_rms = True)
         #filtered_audio_clip_path = remove_noise(audio_clip_path)
         audio_class = classify(audio_clip_path)
         txt = ','.join([str(logtime), str(audio_class)])
