@@ -8,7 +8,7 @@ sys.path.append('/home/pi/Dexter/GoPiGo3/Software/Python')
 sys.path.append('..')
 import scavbot
 import config
-from coneutils import calibrate
+from coneutils import calibrate, detect
 
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 # e.g. /home/pi/Desktop/code/capstone_project/capstone-project-3/scav-hunt/tests
@@ -22,8 +22,8 @@ MODEL_DIR = os.path.join(HUNT_DIR, 'models')
 
 image_model_dir = os.path.join(MODEL_DIR, 'visual', 'custom_model_edgeTPU')
 cone_model_dir = os.path.join(MODEL_DIR, 'visual', 'custom_cone_model_edgetpu')
-image_dir='/home/pi/Pictures'
-cone_image_dir= os.path.join(image_dir, 'scav_hunt')
+image_dir='.'
+cone_image_dir= os.path.join(image_dir, 'cones')
 
 print('Test the loading of the TFLITE runtime and make sure the TPU is plugged in')
 from tflite_runtime.interpreter import Interpreter
@@ -43,4 +43,30 @@ model = ConeClassificationModel(
     min_conf_threshold=0.3,
     use_TPU=True)
 
-boxes_list, classes_list, scores_list, objects_detected, objects_dict = model.classify(os.path.join(model.image_dir, 'archive/orange'))
+# There needs to be "cones" subdirectory in the tests folder. Within that cones subdir should be
+# one directory per color cone that the model should check
+assert(os.path.isdir('cones'))
+colors = os.listdir('cones')
+
+color_dict = {
+    'blue':0,
+    'green':1,
+    'orange':2,
+    'purple':3,
+    'red':4,
+    'yellow':5
+}
+
+results = {}
+for color in colors:
+    cone_images = os.listdir(os.path.join('cones', color))
+    for cone_image in cone_images:
+        image_path = os.path.join('cones', color, cone_image)
+        cones = model.classify(image_path)
+        conecolor_index = color_dict[color]
+        cone_x = detect.findcone_mod(conecolor_index, cones)
+        results[image_path] = cone_x
+
+print(results)
+accuracy = sum([0 if v is False else 1 for k, v in results.items()])/len(results)
+print('Total Accuracy: ', accuracy)
