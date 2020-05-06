@@ -1,15 +1,72 @@
 import sys
 sys.path.append('/home/pi/Dexter/GoPiGo3/Software/Python')
 
-
+from multiprocessing import Process
 import scavbot
 import config
 from coneutils import calibrate
+import scavear
+import time
+from threading import Thread
+
+import logging
+main_logger = logging.getLogger('gpg')
+main_logger.setLevel(logging.DEBUG)
+fname = 'gopigo.log' # Any name for the log file
+
+# Create the FileHandler object. This is required!
+fh = logging.FileHandler(fname, mode='w')
+fh.setLevel(logging.INFO)  # Will write to the log file the messages with level >= logging.INFO
+
+# The following row is strongly recommended for the GoPiGo Test!
+fh_formatter = logging.Formatter('%(relativeCreated)d,%(name)s,%(message)s')
+fh.setFormatter(fh_formatter)
+main_logger.addHandler(fh)
+mic_logger = logging.getLogger('gpg.mic')
+visual_logger = logging.getLogger('gpg.find_cone')
+
+
+print('listening for start signal...')
+import pyaudio
+import audioop as ao
+THRESHOLD = 3000
+FORMAT=pyaudio.paInt16
+CHANNELS = 2
+RATE = 44100
+CHUNK = 1024
+
+#listen for start signal
+silence=True
+swidth = 2
+audio  = pyaudio.PyAudio()
+stream = audio.open(format=FORMAT, channels=CHANNELS,
+                rate=RATE, input=True,
+                frames_per_buffer=CHUNK)
+while(silence):
+	print('Waiting for start signal...')
+	trigger = stream.read(CHUNK)
+	volume = int(ao.rms(trigger, swidth))
+	#print(volume)
+	if (volume > THRESHOLD):
+		silence = False
+		stream.stop_stream()
+		stream.close()
+		audio.terminate()
+print('GO!!!!!')
+
+time.sleep(2) #wait for 2 seconds to let the beep end then start scavear.
+
+
 boundaries_dict = calibrate.load_boundaries('coneutils/boundaries.json')
 image_model_dir = '/home/pi/Desktop/code/capstone_project/capstone-project-3/scav-hunt/custom_model_edgeTPU/'
 cone_model_dir = '/home/pi/Desktop/code/capstone_project/capstone-project-3/scav-hunt/custom_cone_model_edgetpu/'
 image_dir='/home/pi/Pictures/'
 cone_image_dir='/home/pi/Pictures/Cones/orange'
+
+
+p = Thread(target=scavear.perform_scavear,args=(mic_logger,))
+p.start()
+#p.join()
 
 bot = scavbot.ScavBot(
 	image_model_dir=image_model_dir ,
@@ -17,41 +74,39 @@ bot = scavbot.ScavBot(
 	image_dir=image_dir,
 	cone_image_dir=cone_image_dir,
 	params=config.params,
-	boundaries = boundaries_dict
+	boundaries = boundaries_dict,
+	logger=visual_logger
 )
 
-#just to center the servo at the beginnning
-bot.servo.rotate_servo(90)
+bot.hunt('yellow')
+#p.terminate()
 
-print('Starting The Hunt')
-print('Looking for Green cone')
-bot.drive_to_cone("green")
-print('Reached Green cone')
-bot.circum_navigate("green")
-print('Green cone done, looking for base cone')
+# print('Starting The Hunt')
+# bot.servo.rotate_servo(90)
+# bot.hunt('green')
+# bot.hunt('red')
+# bot.hunt('yellow')
+# bot.hunt('red')
+# bot.hunt('purple')
+# bot.drive_to_cone('red')
+# bot.gpg.set_speed(300)
+# bot.gpg.drive_cm(20)
+# bot.gpg.turn_degrees(90)
+# print('Reached Base: HUNT OVER!!!!')
+# p.terminate()
 
-bot.drive_to_cone("red")
-print('Reached base')
-bot.circum_navigate("red")
+# p = Process(target=visual_task)
+# p.start()
+# p.join()
 
-print('Looking for Yellow cone now')
-bot.drive_to_cone("yellow")
-print('Reached Yellow cone')
-bot.circum_navigate("yellow")
-print('Yellow cone done, looking for base cone')
-
-bot.drive_to_cone("red")
-print('Reached base')
-bot.circum_navigate("red")
-
-print('Looking for Purple cone now')
-bot.drive_to_cone("purple")
-print('Reached Purple cone')
-bot.circum_navigate("purple")
-print('Purple cone done, looking for base cone')
-
-bot.drive_to_cone("red")
-bot.gpg.set_speed(300)
-bot.gpg.drive_cm(20)
-bot.gpg.turn_degrees(90)
-print('Reached Base: HUNT OVER!!!!')
+#submit gopigo.log to ilykei server
+from robo_client import connection
+print('Submitting log to Ilykei')  
+HOST, PORT = 'datastream.ilykei.com', 30078
+login = 'atal@uchicago.edu'
+password = 'tCTobEfH'
+split_id = 19
+filename = 'gopigo.log'
+status = connection(HOST, PORT, login, password, split_id, filename)   
+if(status):
+	print('Log submitted successfuly')

@@ -9,8 +9,10 @@ import glob
 from scaveye import ObjectClassificationModel, ConeClassificationModel,take_picture, record_video
 from coneutils import detect
 
+from threading import Thread
+
 class ScavBot:
-    def __init__(self, image_model_dir, cone_model_dir, image_dir, cone_image_dir,params, boundaries, log_dir='logs'):
+    def __init__(self, image_model_dir, cone_model_dir, image_dir, cone_image_dir,params, boundaries,logger, log_dir='logs'):
         self.gpg = EasyGoPiGo3()
         self.dist_sensor = self.gpg.init_distance_sensor(port="AD1")
         self.servo = self.gpg.init_servo("SERVO1")
@@ -36,6 +38,7 @@ class ScavBot:
             use_TPU=True)
 
         # Log File
+        self.logger = logger
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
         self.log_path = os.path.join(log_dir, 'log_'+ str(date.today())+'.txt')
@@ -172,12 +175,12 @@ class ScavBot:
             print("I will now cicle the cone at {} mm ".format(radius))
             self.orbit_and_take_picture(150, radius, color, turn_90=True)
             self.orbit_and_take_picture(100, radius, color)
-        elif color == 'yellow':
+        elif color == 'purple':
             radius = 60
             print("I will now cicle the cone at {} mm ".format(radius))
             self.orbit_and_take_picture(150, radius, color, turn_90=True)
             self.orbit_and_take_picture(100, radius, color)
-        elif color =='purple':
+        elif color =='yellow':
             radius = 70
             print("I will now cicle the cone at {} mm ".format(radius))
             self.orbit_and_take_picture(150, radius, color, turn_90=True)
@@ -215,14 +218,35 @@ class ScavBot:
             self.gpg.drive_cm(-drive_cm)
             #take_picture(picture_path)
             record_video(video_path,cone_color=color,duration=3)
-            cone_object = self.image_model.classify_video(video_path+color)
-            print('!!!!!!!!!!!!Behind {} cone I found {}'.format(color,cone_object))
+            # cone_object = self.image_model.classify_video(video_path+color)
+            # print('!!!!!!!!!!!!Behind {} cone I found {}'.format(color,cone_object))
+            self.start_classification(video_path,color)
             self.gpg.drive_cm(drive_cm)
             self.gpg.turn_degrees(-90)
             #self.servo.rotate_servo(30)
         else:
             #take_picture(picture_path)
             pass
+
+    #Running classification on a separate thread to make it run when robot is running
+    def classify_and_log_object_thread(self,video_path,color):
+        cone_object = self.image_model.classify_video(video_path+color)
+        print('!!!!!!!!!!!!Behind {} cone I found {}'.format(color,cone_object))
+        txt = ','.join([str(datetime.now()), color, str(cone_object)])
+        self.log(txt)
+        color_name = color
+        class_name = cone_object
+        self.logger.info('%s,%s' % (color_name, class_name))
+        print('Logged: ', txt)
+
+    #Start the object classification thread
+    def start_classification(self,video_path,color):
+        print('Starting a new classification thread')
+        Thread(target=self.classify_and_log_object_thread,args=(video_path,color)).start()
+        print('Running classification on a different thread')
+        return self
+
+
 
     def classify_and_log(self, color):
         image_dir = os.path.join(self.image_model.image_dir, color)
@@ -232,11 +256,11 @@ class ScavBot:
         print('Logged: ', txt)
         return txt
 
-    def main(self, color):
-        self.center_cone(color)
+    def hunt(self, color):
+        #self.center_cone(color)
         self.drive_to_cone(color)
         self.circum_navigate(color)
-        self.classify_and_log(color)
+        #self.classify_and_log(color)
 
 
 if __name__ == '__main__':
