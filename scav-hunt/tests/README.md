@@ -5,6 +5,8 @@
 To test the cone model first download (or take pictures of) the cones you wish
 to run the test_edgetpu script against.
 
+[Gleacher Center cone images](https://uchicago.box.com/s/i4ri6wv0b74f0u6qdnafix60ttgpaja6)
+
 Save within a cones directory in this folder with each color in it's own sub-directory
 
     tests/
