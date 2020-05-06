@@ -4,6 +4,7 @@
 
 import os
 import sys
+import glob
 sys.path.append('/home/pi/Dexter/GoPiGo3/Software/Python')
 sys.path.append('..')
 import scavbot
@@ -22,8 +23,13 @@ MODEL_DIR = os.path.join(HUNT_DIR, 'models')
 
 image_model_dir = os.path.join(MODEL_DIR, 'visual', 'custom_model_edgeTPU')
 cone_model_dir = os.path.join(MODEL_DIR, 'visual', 'custom_cone_model_edgetpu')
+
+# Assumes image dir is current tests/ directory and the cones are in a subdir labeled cones/
+# Other values might be /home/pi/Pictures & cones etc
+# Don't add '/' at the end. os.path.join will do that for you
 image_dir='.'
-cone_image_dir= os.path.join(image_dir, 'cones')
+cone_dir = 'cones'
+cone_image_dir= os.path.join(image_dir, cone_dir)
 
 print('Test the loading of the TFLITE runtime and make sure the TPU is plugged in')
 from tflite_runtime.interpreter import Interpreter
@@ -45,8 +51,10 @@ model = ConeClassificationModel(
 
 # There needs to be "cones" subdirectory in the tests folder. Within that cones subdir should be
 # one directory per color cone that the model should check
-assert(os.path.isdir('cones'))
-colors = os.listdir('cones')
+assert(os.path.isdir(cone_dir))
+colors = os.listdir(cone_dir)
+if '.DS_Store' in colors:
+    colors.remove('.DS_Store')
 
 color_dict = {
     'blue':0,
@@ -59,13 +67,12 @@ color_dict = {
 
 results = {}
 for color in colors:
-    cone_images = os.listdir(os.path.join('cones', color))
+    cone_images = glob.glob(os.path.join(cone_dir, color, '*'))
     for cone_image in cone_images:
-        image_path = os.path.join('cones', color, cone_image)
-        cones = model.classify(image_path)
+        cones = model.classify(cone_image)
         conecolor_index = color_dict[color]
         cone_x = detect.findcone_mod(conecolor_index, cones)
-        results[image_path] = cone_x
+        results[cone_image] = cone_x
 
 print(results)
 accuracy = sum([0 if v is False else 1 for k, v in results.items()])/len(results)
