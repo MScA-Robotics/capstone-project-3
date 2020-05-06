@@ -274,7 +274,10 @@ class ConeClassificationModel:
         self.input_std = 127.5
 
     def classify(self, image_dir):
-        images = glob.glob(image_dir + '/*.jpg')
+        if image_dir.endswith('.jpg'):
+            images = [image_dir]
+        else:
+            images = glob.glob(image_dir + '/*.jpg')
         classes_list = []
         scores_list = []
         boxes_list =[]
