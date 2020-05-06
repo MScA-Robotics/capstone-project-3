@@ -26,37 +26,6 @@ mic_logger = logging.getLogger('gpg.mic')
 visual_logger = logging.getLogger('gpg.find_cone')
 
 
-print('listening for start signal...')
-import pyaudio
-import audioop as ao
-THRESHOLD = 3000
-FORMAT=pyaudio.paInt16
-CHANNELS = 2
-RATE = 44100
-CHUNK = 1024
-
-#listen for start signal
-silence=True
-swidth = 2
-audio  = pyaudio.PyAudio()
-stream = audio.open(format=FORMAT, channels=CHANNELS,
-                rate=RATE, input=True,
-                frames_per_buffer=CHUNK)
-while(silence):
-	print('Waiting for start signal...')
-	trigger = stream.read(CHUNK)
-	volume = int(ao.rms(trigger, swidth))
-	#print(volume)
-	if (volume > THRESHOLD):
-		silence = False
-		stream.stop_stream()
-		stream.close()
-		audio.terminate()
-print('GO!!!!!')
-
-time.sleep(2) #wait for 2 seconds to let the beep end then start scavear.
-
-
 boundaries_dict = calibrate.load_boundaries('coneutils/boundaries.json')
 image_model_dir = '/home/pi/Desktop/code/capstone_project/capstone-project-3/scav-hunt/custom_model_edgeTPU/'
 cone_model_dir = '/home/pi/Desktop/code/capstone_project/capstone-project-3/scav-hunt/custom_cone_model_edgetpu/'
@@ -64,9 +33,7 @@ image_dir='/home/pi/Pictures/'
 cone_image_dir='/home/pi/Pictures/Cones/orange'
 
 
-p = Thread(target=scavear.perform_scavear,args=(mic_logger,))
-p.start()
-#p.join()
+#initialize bot
 
 bot = scavbot.ScavBot(
 	image_model_dir=image_model_dir ,
@@ -78,26 +45,69 @@ bot = scavbot.ScavBot(
 	logger=visual_logger
 )
 
-bot.hunt('yellow')
-#p.terminate()
+def wait_for_start_signal():
+	print('listening for start signal...')
+	import pyaudio
+	import audioop as ao
+	THRESHOLD = 3000
+	FORMAT=pyaudio.paInt16
+	CHANNELS = 2
+	RATE = 44100
+	CHUNK = 1024
 
-# print('Starting The Hunt')
-# bot.servo.rotate_servo(90)
+	#listen for start signal
+	silence=True
+	swidth = 2
+	audio  = pyaudio.PyAudio()
+	stream = audio.open(format=FORMAT, channels=CHANNELS,
+					rate=RATE, input=True,
+					frames_per_buffer=CHUNK)
+	while(silence):
+		#print('Waiting for start signal...')
+		trigger = stream.read(CHUNK)
+		volume = int(ao.rms(trigger, swidth))
+		#print(volume)
+		if (volume > THRESHOLD):
+			silence = False
+			mic_logger.info('Start')
+			stream.stop_stream()
+			stream.close()
+			audio.terminate()
+	print('GO!!!!!')
+
+wait_for_start_signal()
+print('Starting The Hunt')
+time.sleep(2) #wait for 2 seconds to let the beep end then start scavear.
+
+#start scavear on different thread
+p = Thread(target=scavear.perform_scavear,args=(mic_logger,))
+p.start()
+#p.join()
+
+
+
+#for testing only
 # bot.hunt('green')
-# bot.hunt('red')
 # bot.hunt('yellow')
-# bot.hunt('red')
 # bot.hunt('purple')
-# bot.drive_to_cone('red')
-# bot.gpg.set_speed(300)
-# bot.gpg.drive_cm(20)
-# bot.gpg.turn_degrees(90)
-# print('Reached Base: HUNT OVER!!!!')
+
+
+
+bot.servo.rotate_servo(90)
+bot.hunt('green')
+bot.hunt('red')
+bot.hunt('purple')
+bot.hunt('red')
+bot.hunt('yellow')
+bot.drive_to_cone('red')
+bot.gpg.set_speed(300)
+bot.gpg.drive_cm(20)
+bot.gpg.turn_degrees(90)
+print('Reached Base: HUNT OVER!!!!')
 # p.terminate()
 
-# p = Process(target=visual_task)
-# p.start()
-# p.join()
+mic_logger.info('Finish')
+
 
 #submit gopigo.log to ilykei server
 from robo_client import connection
