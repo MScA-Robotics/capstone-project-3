@@ -113,7 +113,7 @@ mic_logger.info('Finish')
 from robo_client import connection
 print('Submitting log to Ilykei')  
 HOST, PORT = 'datastream.ilykei.com', 30078
-login = 'atal@uchicago.edu'
+login = 'xxxx'
 password = 'XXX'
 split_id = 19
 filename = 'gopigo.log'
