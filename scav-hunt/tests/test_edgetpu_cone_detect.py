@@ -69,4 +69,4 @@ for color in colors:
 
 print(results)
 accuracy = sum([0 if v is False else 1 for k, v in results.items()])/len(results)
-print('Total Accuracy: ', accuracy)
+print('Total Accuracy: ', "{:.2%}".format(accuracy))
