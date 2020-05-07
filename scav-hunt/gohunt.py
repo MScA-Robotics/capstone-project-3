@@ -79,6 +79,7 @@ wait_for_start_signal()
 print('Starting The Hunt')
 time.sleep(2) #wait for 2 seconds to let the beep end then start scavear.
 
+#scavear.perform_scavear(mic_logger)
 #start scavear on different thread
 p = Thread(target=scavear.perform_scavear,args=(mic_logger,))
 p.start()
@@ -109,12 +110,12 @@ print('Reached Base: HUNT OVER!!!!')
 mic_logger.info('Finish')
 
 
-#submit gopigo.log to ilykei server
+# #submit gopigo.log to ilykei server
 from robo_client import connection
 print('Submitting log to Ilykei')  
 HOST, PORT = 'datastream.ilykei.com', 30078
-login = 'xxxx'
-password = 'XXX'
+login = 'atal@uchicago.edu'
+password = 'tCTobEfH'
 split_id = 19
 filename = 'gopigo.log'
 status = connection(HOST, PORT, login, password, split_id, filename)   

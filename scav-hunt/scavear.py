@@ -66,9 +66,9 @@ def perform_scavear(logger):
 
 
 
-    def classify(audio_file_path):
-        #return model.predict(audio_file_path, prediction_type = "labels")
-        return nn_model.predict(audio_file_path)
+    # def classify(audio_file_path):
+    #     #return model.predict(audio_file_path, prediction_type = "labels")
+    #     return nn_model.predict(audio_file_path)
 
 
     def log(txt):

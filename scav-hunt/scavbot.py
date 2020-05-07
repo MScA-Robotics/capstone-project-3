@@ -235,7 +235,9 @@ class ScavBot:
         txt = ','.join([str(datetime.now()), color, str(cone_object)])
         self.log(txt)
         color_name = color
-        class_name = cone_object
+        if cone_object == 'Wine glass':
+            cone_object = 'wine_glass'   
+        class_name = cone_object.lower()
         self.logger.info('%s,%s' % (color_name, class_name))
         print('Logged: ', txt)
 
