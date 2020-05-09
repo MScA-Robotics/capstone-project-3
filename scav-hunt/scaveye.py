@@ -332,7 +332,7 @@ class ConeClassificationModel:
                     xmin = int(max(1,(boxes[i][1] * imW)))
                     ymax = int(min(imH,(boxes[i][2] * imH)))
                     xmax = int(min(imW,(boxes[i][3] * imW)))
-                    print((xmin,ymin), (xmax,ymax),(imH,imW))
+                    #print((xmin,ymin), (xmax,ymax),(imH,imW))
                     cv2.rectangle(image, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
                     #print(i)
                     #print(classes_list)

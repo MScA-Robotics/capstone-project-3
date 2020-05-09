@@ -118,7 +118,7 @@ class ScavBot:
             files = glob.glob(cone_image_path+'*')
             filename = os.path.basename(files[0])
 
-            print('destination:{}'.format(backup_image_path+filename))
+            #print('destination:{}'.format(backup_image_path+filename))
             os.rename(files[0], backup_image_path+filename)
             #os.remove(files[0])
         print('Found {} cone!'.format(color))
@@ -134,9 +134,9 @@ class ScavBot:
         while ob_dist >= self.params['cone_dist'] or ob_dist ==0:#sometimes distance sensor gives 0mm reading erroneously
             self.gpg.forward()
             ob_dist = self.dist_sensor.read_mm()
-            print('Distance to cone:',ob_dist)
+            #print('Distance to cone:',ob_dist)
             # Every three seconds, recenter the cone
-            if time.time() - t0 > 3:
+            if time.time() - t0 > 2:
                 self.gpg.set_speed(self.params['m_spd'])
                 self.gpg.stop()
                 print('Recentering')
@@ -169,20 +169,22 @@ class ScavBot:
             print('orbiting red cone at {}'.format(radius))
             print("I will now cicle the cone at {} mm ".format(radius))
             self.gpg.set_speed(self.params['h_spd']) #high speed for red cone
-            self.gpg.orbit(300, radius)
+            self.gpg.orbit(290, radius)
         elif color == 'green':
             radius = 50 
             print("I will now cicle the cone at {} mm ".format(radius))
             self.orbit_and_take_picture(150, radius, color, turn_90=True)
             self.orbit_and_take_picture(100, radius, color)
         elif color == 'purple':
-            radius = 60
+            radius = 50
             print("I will now cicle the cone at {} mm ".format(radius))
+            #self.gpg.set_speed(self.params['h_spd']) #high speed for purple cone
             self.orbit_and_take_picture(150, radius, color, turn_90=True)
             self.orbit_and_take_picture(100, radius, color)
         elif color =='yellow':
             radius = 70
             print("I will now cicle the cone at {} mm ".format(radius))
+            self.gpg.set_speed(350)
             self.orbit_and_take_picture(150, radius, color, turn_90=True)
             self.orbit_and_take_picture(100, radius, color)
             # Complete the orbit
@@ -217,7 +219,7 @@ class ScavBot:
             drive_cm = 10
             self.gpg.drive_cm(-drive_cm)
             #take_picture(picture_path)
-            record_video(video_path,cone_color=color,duration=3)
+            record_video(video_path,cone_color=color,duration=2)
             # cone_object = self.image_model.classify_video(video_path+color)
             # print('!!!!!!!!!!!!Behind {} cone I found {}'.format(color,cone_object))
             self.start_classification(video_path,color)

@@ -162,8 +162,8 @@ def perform_scavear(logger):
         # send for filtering
         filtered_audio_clip_path = filter_clip(audio_clip_path)
         #classify
-        audio_class = classify(filtered_audio_clip_path)
-        #audio_class = classify(audio_clip_path)
+        #audio_class = classify(filtered_audio_clip_path)
+        audio_class = classify(audio_clip_path)
         # log
         txt = ','.join([str(logtime), str(audio_class)])
         logger.info(audio_class)

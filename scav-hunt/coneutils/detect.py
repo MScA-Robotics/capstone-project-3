@@ -161,7 +161,7 @@ def findcone_mod(color, cones):
     centers = []
     for rect in bounding_Rects:
         center = rect[1]+(rect[3]-rect[1])/2
-        print(center)
+        #print(center)
         #center = rect[0]+rect[2]-rect[2]/2
         centers.append(center)
     #return horizontal position of (first) found cone

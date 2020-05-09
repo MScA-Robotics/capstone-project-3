@@ -68,16 +68,20 @@ def wait_for_start_signal():
 		volume = int(ao.rms(trigger, swidth))
 		#print(volume)
 		if (volume > THRESHOLD):
-			silence = False
 			mic_logger.info('Start')
+			silence = False
 			stream.stop_stream()
 			stream.close()
 			audio.terminate()
 	print('GO!!!!!')
 
 wait_for_start_signal()
+start_time = time.time()
 print('Starting The Hunt')
-time.sleep(2) #wait for 2 seconds to let the beep end then start scavear.
+
+
+
+time.sleep(1) #wait for 2 seconds to let the beep end then start scavear.
 
 #scavear.perform_scavear(mic_logger)
 #start scavear on different thread
@@ -93,7 +97,7 @@ p.start()
 # bot.hunt('purple')
 
 
-
+#main run
 bot.servo.rotate_servo(90)
 bot.hunt('green')
 bot.hunt('red')
@@ -101,13 +105,15 @@ bot.hunt('purple')
 bot.hunt('red')
 bot.hunt('yellow')
 bot.drive_to_cone('red')
+mic_logger.info('Finish') #log finish one reached the cone
+elapsed_time = time.time() - start_time
+print(elapsed_time)
 bot.gpg.set_speed(300)
 bot.gpg.drive_cm(20)
 bot.gpg.turn_degrees(90)
 print('Reached Base: HUNT OVER!!!!')
 # p.terminate()
 
-mic_logger.info('Finish')
 
 
 # #submit gopigo.log to ilykei server
