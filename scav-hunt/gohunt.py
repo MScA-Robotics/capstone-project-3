@@ -120,8 +120,8 @@ print('Reached Base: HUNT OVER!!!!')
 from robo_client import connection
 print('Submitting log to Ilykei')  
 HOST, PORT = 'datastream.ilykei.com', 30078
-login = 'atal@uchicago.edu'
-password = 'tCTobEfH'
+login = 'xxx'
+password = 'xxx'
 split_id = 19
 filename = 'gopigo.log'
 status = connection(HOST, PORT, login, password, split_id, filename)   
