@@ -23,7 +23,7 @@ def take_picture(path):
         print('Picture taken')
         camera.close()
 
-        
+
 def record_video(path=None, cone_color='green', duration=5, runid=0):
     if path is None:
         path="/home/pi/Videos"
@@ -61,17 +61,12 @@ class ObjectClassificationModel:
             del(labels[0])
         self.labels = labels
 
-        pkg = importlib.util.find_spec('tensorflow')
-        if pkg is None:
+        # Tensorflow Interpreter depends on if the model is a tflite model or not
+        if self.use_TPU:
             from tflite_runtime.interpreter import Interpreter
-            if self.use_TPU:
-                print('Loading tflite interpreter')
-                from tflite_runtime.interpreter import load_delegate
+            from tflite_runtime.interpreter import load_delegate
         else:
             from tensorflow.lite.python.interpreter import Interpreter
-            if self.use_TPU:
-                print('Loading tflite interpreter')
-                from tflite_runtime.interpreter import load_delegate
 
         # If using Edge TPU, assign filename for Edge TPU model
         if self.use_TPU:
@@ -80,12 +75,12 @@ class ObjectClassificationModel:
                 graph_name = 'edgetpu.tflite'
 
         PATH_TO_CKPT = os.path.join(CWD_PATH, model_dir, graph_name)
-        
+
         # Load the Tensorflow Lite model.
         # If using Edge TPU, use special load_delegate argument
         if self.use_TPU:
             self.interpreter = Interpreter(model_path=PATH_TO_CKPT,
-                                    experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
+                                           experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
             print(PATH_TO_CKPT)
         else:
             self.interpreter = Interpreter(model_path=PATH_TO_CKPT)
@@ -106,11 +101,11 @@ class ObjectClassificationModel:
         scores_list = []
         for image_path in images:
             print('Classifying: {}'.format(image_path))
-            
+
             # Load image and resize to expected shape [1xHxWx3]
             image = cv2.imread(image_path)
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            imH, imW, _ = image.shape 
+            imH, imW, _ = image.shape
             image_resized = cv2.resize(image_rgb, (self.width, self.height))
             input_data = np.expand_dims(image_resized, axis=0)
 
@@ -123,10 +118,10 @@ class ObjectClassificationModel:
             self.interpreter.invoke()
 
             # Retrieve detection results
-            # We are not using the boxes right now since we do not need to know 
+            # We are not using the boxes right now since we do not need to know
             # where picture the object is, only that it is there.
             # boxes = interpreter.get_tensor(output_details[0]['index'])[0] # Bounding box coordinates of detected objects
-            
+
             classes = self.interpreter.get_tensor(self.output_details[1]['index'])[0] # Class index of detected objects
             scores = self.interpreter.get_tensor(self.output_details[2]['index'])[0] # Confidence of detected objects
             classes_list.append(classes[scores > self.min_conf_threshold])
@@ -142,8 +137,8 @@ class ObjectClassificationModel:
                     objects_detected[obj] = 1
 
         return classes_list, scores_list, objects_detected
-    
-    
+
+
     def classify_video(self, video_dir):
         """Function to detect objects in video file"""
         #1. Get the list of all video files from the directory passed in
@@ -159,7 +154,7 @@ class ObjectClassificationModel:
         for video_file in videos:
             video_name=os.path.basename(video_file)
             print('Processing video: {}'.format(video_name))
-            #4.1 Open the video file 
+            #4.1 Open the video file
             video = cv2.VideoCapture(video_file)
             imW = video.get(cv2.CAP_PROP_FRAME_WIDTH)
             imH = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -175,7 +170,7 @@ class ObjectClassificationModel:
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame_resized = cv2.resize(frame_rgb, (self.width, self.height))
                 input_data = np.expand_dims(frame_resized, axis=0)
-                
+
                 # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
                 if self.floating_model:
                     input_data = (np.float32(input_data) - self.input_mean) / self.input_std
@@ -199,7 +194,7 @@ class ObjectClassificationModel:
                         xmin = int(max(1,(boxes[i][1] * imW)))
                         ymax = int(min(imH,(boxes[i][2] * imH)))
                         xmax = int(min(imW,(boxes[i][3] * imW)))
-                        
+
                         cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (10, 255, 0), 4)
 
                         # Draw label
@@ -245,31 +240,25 @@ class ConeClassificationModel:
             del(labels[0])
         self.labels = labels
 
-        pkg = importlib.util.find_spec('tensorflow')
-        if pkg is None:
+        # Tensorflow Interpreter depends on if the model is a tflite model or not
+        if self.use_TPU:
             from tflite_runtime.interpreter import Interpreter
-            if self.use_TPU:
-                print('Loading tflite interpreter')
-                from tflite_runtime.interpreter import load_delegate
+            from tflite_runtime.interpreter import load_delegate
         else:
             from tensorflow.lite.python.interpreter import Interpreter
-            if self.use_TPU:
-                print('Loading tflite interpreter')
-                from tflite_runtime.interpreter import load_delegate
-
         # If using Edge TPU, assign filename for Edge TPU model
         if self.use_TPU:
             # If user has specified the name of the .tflite file, use that name, otherwise use default 'edgetpu.tflite'
             if (graph_name == 'cone_detect.tflite'):
                 graph_name = 'cone_edgetpu.tflite'
-        # Load the model 
+        # Load the model
         PATH_TO_CKPT = os.path.join(CWD_PATH, model_dir, graph_name)
         #self.interpreter = Interpreter(model_path=PATH_TO_CKPT)
         # Load the Tensorflow Lite model.
         # If using Edge TPU, use special load_delegate argument
         if self.use_TPU:
             self.interpreter = Interpreter(model_path=PATH_TO_CKPT,
-                                    experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
+                                           experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
             print(PATH_TO_CKPT)
         else:
             self.interpreter = Interpreter(model_path=PATH_TO_CKPT)
@@ -285,7 +274,10 @@ class ConeClassificationModel:
         self.input_std = 127.5
 
     def classify(self, image_dir):
-        images = glob.glob(image_dir + '/*.jpg')
+        if image_dir.endswith('.jpg'):
+            images = [image_dir]
+        else:
+            images = glob.glob(image_dir + '/*.jpg')
         classes_list = []
         scores_list = []
         boxes_list =[]
@@ -294,7 +286,7 @@ class ConeClassificationModel:
             # Load image and resize to expected shape [1xHxWx3]
             image = cv2.imread(image_path)
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            imH, imW, _ = image.shape 
+            imH, imW, _ = image.shape
             image_resized = cv2.resize(image_rgb, (self.width, self.height))
             input_data = np.expand_dims(image_resized, axis=0)
 

@@ -28,13 +28,13 @@ class ScavBot:
             image_dir = image_dir,
             min_conf_threshold=0.3,
             use_TPU=True)
-        
+
         # Cone Detection Model
-        self.cone_detection_model = ConeClassificationModel( 
+        self.cone_detection_model = ConeClassificationModel(
             model_dir = cone_model_dir,
             image_dir = cone_image_dir,
             graph_name='cone_detect.tflite',
-            min_conf_threshold=0.3, 
+            min_conf_threshold=0.3,
             use_TPU=True)
 
         # Log File
@@ -54,7 +54,7 @@ class ScavBot:
     def center_cone(self, color):
         print('Finding {} cone'.format(color))
         centered = False
-        current_degree = 0 
+        current_degree = 0
         while not centered:
             time.sleep(.5)
             cone_x = self.find_cone(color)
@@ -71,7 +71,7 @@ class ScavBot:
                 centered = True
         print('Found {} cone!'.format(color))
         return True
-    
+
     def find_cone_new(self, color,cones):
         return detect.findcone_mod(color,cones)
 
@@ -85,7 +85,7 @@ class ScavBot:
                       'yellow':5}
         conecolor_index = color_dict[color]
         centered = False
-        current_degree = 0 
+        current_degree = 0
         cone_image_path = '/home/pi/Pictures/Cones/'+color+'/'
         backup_image_path = '/home/pi/Pictures/Cones/backup/'+color+'/'
         while not centered:
@@ -121,7 +121,7 @@ class ScavBot:
             #os.remove(files[0])
         print('Found {} cone!'.format(color))
         return True
-        
+
     def drive_to_cone(self, color):
         self.center_cone_with_tfmodel(color)
         print('Driving to {} cone'.format(color))
@@ -166,7 +166,7 @@ class ScavBot:
             self.gpg.set_speed(self.params['h_spd']) #high speed for red cone
             self.gpg.orbit(300, radius)
         elif color == 'green':
-            radius = 50 
+            radius = 50
             print("I will now cicle the cone at {} mm ".format(radius))
             self.orbit_and_take_picture(150, radius, color, turn_90=True)
             self.orbit_and_take_picture(100, radius, color)
@@ -226,9 +226,23 @@ if __name__ == '__main__':
 
     boundaries_dict = calibrate.load_boundaries('coneutils/boundaries.json')
 
+    TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
+    # e.g. /home/pi/Desktop/code/capstone_project/capstone-project-3/scav-hunt/tests
+    HUNT_DIR = str.replace(TESTS_DIR, '/tests', '')
+    # e.g. /home/pi/Desktop/code/capstone_project/capstone-project-3/scav-hunt
+    MODEL_DIR = os.path.join(HUNT_DIR, 'models')
+    # e.g. /home/pi/Desktop/code/capstone_project/capstone-project-3/scav-hunt/models
+
+    image_model_dir = os.path.join(MODEL_DIR, 'visual', 'custom_model_edgeTPU')
+    cone_model_dir = os.path.join(MODEL_DIR, 'visual', 'custom_cone_model_edgetpu')
+    image_dir='/home/pi/Pictures/'
+    cone_image_dir='/home/pi/Pictures/Cones/'
+
     bot = ScavBot(
-        image_model_dir='Sample_TFLite_model', 
-        image_dir='/home/pi/Pictures/scav_hunt',
+        image_model_dir=image_model_dir ,
+        cone_model_dir=cone_model_dir,
+        image_dir=image_dir,
+        cone_image_dir=cone_image_dir,
         params=config.params,
         boundaries = boundaries_dict
     )
